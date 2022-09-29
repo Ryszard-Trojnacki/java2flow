@@ -2,3 +2,7 @@ plugins {
     id 'java-gradle-plugin'
     id 'idea'
 }
+
+dependencies {
+    implementation project(":java2flow-core")
+}
