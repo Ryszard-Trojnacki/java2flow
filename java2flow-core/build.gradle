@@ -1,0 +1,18 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+sourceCompatibility = 9
+targetCompatibility = 9
+
+dependencies {
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4'
+
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+}

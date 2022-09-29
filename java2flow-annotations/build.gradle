@@ -1,0 +1,12 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+sourceCompatibility = 9
+targetCompatibility = 9

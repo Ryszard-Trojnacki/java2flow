@@ -1,0 +1,1 @@
+include ":java2flow-annotations", ":java2flow-core", ":java2flow-gradle-plugin"
