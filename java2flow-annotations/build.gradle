@@ -1,12 +1,14 @@
 plugins {
     id 'java-library'
     id 'idea'
+    id 'maven-publish'
 }
 
 repositories {
     mavenCentral()
-    mavenLocal()
 }
 
-sourceCompatibility = 9
-targetCompatibility = 9
+java {
+    sourceCompatibility = 9
+    targetCompatibility = 9
+}

@@ -1,8 +1,33 @@
 plugins {
     id 'java-gradle-plugin'
     id 'idea'
+    id 'maven-publish'
+}
+
+java {
+    sourceCompatibility = 9
+    targetCompatibility = 9
+}
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {
     implementation project(":java2flow-core")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation(gradleApi())
+}
+
+gradlePlugin {
+    plugins {
+        java2flow {
+            id = 'pl.rtprog.java2flow'
+            implementationClass = 'pl.rtprog.java2flow.Java2FlowPlugin'
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
 }
