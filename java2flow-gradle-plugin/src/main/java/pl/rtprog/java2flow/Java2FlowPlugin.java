@@ -4,8 +4,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 
-import java.lang.module.Configuration;
-
 /**
  * Java2Flow Gradle plugin.
  *
@@ -17,15 +15,17 @@ public class Java2FlowPlugin implements Plugin<Project> {
         final Java2FlowExtension ext=project.getExtensions().create("java2flow", Java2FlowExtension.class);
 
         Task task=project.getTasks().create("java2flow", Java2FlowTask.class, t -> {
-            t.classes().set(ext.classes());
-            t.output().set(ext.output());
+            t.getClasses().set(ext.getClasses());
+            t.getOutput().set(ext.getOutput());
+            t.getGenerateEmpty().set(ext.getGenerateEmpty());
+            t.getPackages().set(ext.getPackages());
         });
-//
-//        for(Task t: project.getTasks()) {
-//            if (t.getName().startsWith("compile")) {
-//                task.dependsOn(t.getName());
-//                task.getInputs().files(t);
-//            }
-//        }
+
+        for(Task t: project.getTasks()) {
+            if (t.getName().startsWith("compile")) {
+                task.dependsOn(t.getName());
+                task.getInputs().files(t);
+            }
+        }
     }
 }

@@ -181,7 +181,7 @@ public class Java2Flow {
                         if(fp!=null && fp.description().length()>0) {
                             out.append("\t/** \n\t  ").append(fp.description()).append("\n\t **/\n");
                         }
-                        out.append("\t").append(name).append(' ');
+                        out.append("\t").append(name);
                         JsonInclude ji=prop.getAnnotation(JsonInclude.class);
                         if(ji!=null && ji.value()!= JsonInclude.Include.ALWAYS) out.append('?');
                         out.append(": ");

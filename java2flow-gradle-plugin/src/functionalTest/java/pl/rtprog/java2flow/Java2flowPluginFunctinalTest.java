@@ -1,15 +1,18 @@
 package pl.rtprog.java2flow;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.io.FileWriter;
-import java.nio.file.Files;
-import org.gradle.testkit.runner.GradleRunner;
+import org.gradle.internal.impldep.org.apache.commons.io.FileUtils;
 import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A simple functional test for the 'pl.rtprog.java2flow.greeting' plugin.
@@ -31,18 +34,58 @@ class Java2flowPluginFunctionalTest {
         writeString(getBuildFile(),
                 "plugins {" +
                         "  id('pl.rtprog.java2flow')" +
-                        "}");
+                        "}\n\n" +
+                        "java2flow {\n" +
+                        "generateEmpty = true\n" +
+                        "}\n");
 
         // Run the build
         GradleRunner runner = GradleRunner.create();
         runner.forwardOutput();
         runner.withPluginClasspath();
-        runner.withArguments("java2flow");
+        runner.withArguments("--info", "java2flow");
         runner.withProjectDir(projectDir);
         BuildResult result = runner.build();
 
-        // Verify the result
-        assertTrue(result.getOutput().contains("Hello from Rysiek's plugin"));
+//        System.out.println("TestRes: "+ result.getOutput());
+        assertTrue(new File(new File(projectDir, "build"), "types.js").exists());
+    }
+
+    @Test void simpleTypeTest() throws IOException {
+        writeString(getBuildFile(), "plugins {\n" +
+                "  id 'java'\n" +
+                "  id('pl.rtprog.java2flow')\n" +
+                "}\n\n" +
+                "java2flow {\n" +
+                " classes = [ 'pl.rtprog.SimpleBean' ] \n" +
+                " output = 'types2.js'\n" +
+                "}\n");
+        File srcFile=new File(projectDir, String.join(File.separator, "src", "main", "java",
+                "pl", "rtprog", "SimpleBean.java"));
+        srcFile.getParentFile().mkdirs();
+        writeString(srcFile, "package pl.rtprog;\n\n" +
+                "public class SimpleBean {\n" +
+                "\tpublic String field1;\n" +
+                "\tpublic int field2;\n" +
+                "\tpublic boolean field3;\n" +
+                "}\n");
+        GradleRunner runner = GradleRunner.create();
+        runner.forwardOutput();
+        runner.withPluginClasspath();
+        runner.withArguments("--info", "java2flow");
+        runner.withProjectDir(projectDir);
+        try {
+            BuildResult result = runner.build();
+        }catch (Exception e) {
+            throw e;
+        }
+        File in=new File(projectDir, "types2.js");
+        assertTrue(in.exists());
+        String file=FileUtils.readFileToString(in, StandardCharsets.UTF_8);
+        assertTrue(file.contains("SimpleBean"));
+        assertTrue(file.contains("field1: string|null"));
+        assertTrue(file.contains("field2: number"));
+        assertTrue(file.contains("field3: boolean"));
     }
 
     private void writeString(File file, String string) throws IOException {
