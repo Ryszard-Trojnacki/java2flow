@@ -15,6 +15,9 @@ repositories {
 
 dependencies {
     implementation project(":java2flow-core")
+    implementation group: 'org.jetbrains', name: 'annotations', version: '23.0.0'
+    implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
 }
 

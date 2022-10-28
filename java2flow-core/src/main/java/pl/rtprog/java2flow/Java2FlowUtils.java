@@ -28,7 +28,7 @@ public class Java2FlowUtils {
     static {
         ArrayList<Class<? extends Annotation>> nn=new ArrayList<>();
         nn.add(NotNull.class);
-        addIfExists(nn, "org.jetbrains.annotation.NotNull");
+        addIfExists(nn, "org.jetbrains.annotations.NotNull");   // This will not work, because it is Class RetentionPolicy
         addIfExists(nn, "javax.validation.constraints.NotNull");
         notNulls=nn.toArray(new Class[0]);
     }
