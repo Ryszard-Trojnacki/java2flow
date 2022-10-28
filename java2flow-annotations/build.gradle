@@ -4,8 +4,19 @@ plugins {
     id 'maven-publish'
 }
 
+group 'pl.rtprog'
+version '0.0.1-SNAPSHOT'
+
 repositories {
     mavenCentral()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
 }
 
 java {

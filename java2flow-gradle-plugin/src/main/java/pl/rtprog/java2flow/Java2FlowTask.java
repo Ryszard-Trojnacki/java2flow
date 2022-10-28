@@ -2,6 +2,10 @@ package pl.rtprog.java2flow;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -11,10 +15,9 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class GenerateTask extends DefaultTask {
-    public String outputFile;
-    public List<String> classes;
-//    public List<String> classPatterns;
+public abstract class Java2FlowTask extends DefaultTask {
+    abstract public ListProperty<String> classes();
+    abstract public Property<File> output();
 
     private List<URL> getFilesFromConfiguration(String configuration) {
         try {
@@ -43,6 +46,7 @@ public class GenerateTask extends DefaultTask {
         try (URLClassLoader classLoader = URLClassLoader.newInstance(urls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader())) {
             Java2Flow jf=new Java2Flow();
             jf.addHeader();
+            List<String> classes=this.classes().getOrNull();
             if(classes!=null) {
                 for(String cl: classes) {
                     Class<?> c=classLoader.loadClass(cl);
@@ -55,9 +59,7 @@ public class GenerateTask extends DefaultTask {
                 }
             }
 
-            final File output = outputFile != null
-                    ? getProject().file(outputFile)
-                    : new File(new File(getProject().getBuildDir(), "types.js"), getProject().getName());
+            final File output = this.output().getOrElse(new File(getProject().getBuildDir(), "types.js"));
             getLogger().debug("Generating output to: {}", output);
             try(FileOutputStream out=new FileOutputStream(output)) {
                 out.write(jf.toString().getBytes(StandardCharsets.UTF_8));

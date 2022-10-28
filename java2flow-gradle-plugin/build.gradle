@@ -15,8 +15,7 @@ repositories {
 
 dependencies {
     implementation project(":java2flow-core")
-    testImplementation("junit:junit:4.13.2")
-    testImplementation(gradleApi())
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
 }
 
 gradlePlugin {
@@ -24,10 +23,34 @@ gradlePlugin {
         java2flow {
             id = 'pl.rtprog.java2flow'
             implementationClass = 'pl.rtprog.java2flow.Java2FlowPlugin'
+            displayName = 'Java2Flow Gradle plugin'
+            description = 'Gradle plugin for converting Java structures to JavaSript Flow'
         }
     }
 }
 
-test {
+sourceSets {
+    functionalTest {
+    }
+}
+
+configurations.functionalTestImplementation.extendsFrom(configurations.testImplementation)
+
+
+tasks.register('functionalTest', Test) {
+    testClassesDirs = sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+    useJUnitPlatform()
+}
+
+gradlePlugin.testSourceSets(sourceSets.functionalTest)
+
+tasks.named('check') {
+    // Run the functional tests as part of `check`
+    dependsOn(tasks.functionalTest)
+}
+
+tasks.named('test') {
+    // Use JUnit Jupiter for unit tests.
     useJUnitPlatform()
 }

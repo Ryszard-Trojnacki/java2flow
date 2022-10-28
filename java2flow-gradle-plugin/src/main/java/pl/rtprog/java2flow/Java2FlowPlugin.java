@@ -4,7 +4,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 
-import java.util.Collections;
+import java.lang.module.Configuration;
 
 /**
  * Java2Flow Gradle plugin.
@@ -14,12 +14,18 @@ import java.util.Collections;
 public class Java2FlowPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
-        Task generateTask=project.task(Collections.singletonMap(Task.TASK_TYPE, GenerateTask.class), "generateFlow");
-        for(Task task: project.getTasks()) {
-            if (task.getName().startsWith("compile") && !task.getName().startsWith("compileTest")) {
-                generateTask.dependsOn(task.getName());
-                generateTask.getInputs().files(task);
-            }
-        }
+        final Java2FlowExtension ext=project.getExtensions().create("java2flow", Java2FlowExtension.class);
+
+        Task task=project.getTasks().create("java2flow", Java2FlowTask.class, t -> {
+            t.classes().set(ext.classes());
+            t.output().set(ext.output());
+        });
+//
+//        for(Task t: project.getTasks()) {
+//            if (t.getName().startsWith("compile")) {
+//                task.dependsOn(t.getName());
+//                task.getInputs().files(t);
+//            }
+//        }
     }
 }
