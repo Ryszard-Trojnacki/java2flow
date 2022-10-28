@@ -158,7 +158,7 @@ public class Java2Flow {
             for(Object e: type.getEnumConstants()) {
                 if(first) first=false;
                 else out.append("|");
-                out.append('\'').append(((Enum)e).name()).append('\'');
+                out.append('\'').append(((Enum<?>)e).name()).append('\'');
             }
             out.append(";\n\n");
             types.put(type, name);
@@ -168,12 +168,28 @@ public class Java2Flow {
         final StringBuilder out=new StringBuilder();
         types.put(type, name);
         if(ft!=null && ft.description().length()>0) out.append("/**\n * ").append(ft.description()).append("\n **/\n");
-        out.append("export type ").append(name).append(" = {\n");
+        out.append("export type ").append(name).append(" =");
+        String superClass=null;
+        if(type.getSuperclass()!=Object.class) {
+            String sup=getType(type.getSuperclass(), type.getGenericSuperclass());
+            if(sup!=null) {
+                superClass=sup;
+            }
+        }
+
+        final boolean hasParentClass=(superClass!=null);
+        if(hasParentClass) out.append(" ").append(superClass).append(" &");
+
+        out.append(" {\n");
+
         JsonFormatVisitorWrapper.Base visitor=new JsonFormatVisitorWrapper.Base() {
             @Override
-            public JsonObjectFormatVisitor expectObjectFormat(JavaType type) throws JsonMappingException {
+            public JsonObjectFormatVisitor expectObjectFormat(JavaType type) {
                 return new JsonObjectFormatVisitor.Base() {
                     private void process(BeanProperty prop) {
+                        // Skip parent types members if parent type generated
+                        if(hasParentClass && prop.getMember().getDeclaringClass()!=type.getRawClass()) return;
+
                         String name=prop.getName();
                         FlowProperty fp=prop.getAnnotation(FlowProperty.class);
                         if(fp!=null && fp.value().length()>0) name=fp.value();
@@ -200,12 +216,12 @@ public class Java2Flow {
                     }
 
                     @Override
-                    public void optionalProperty(BeanProperty prop) throws JsonMappingException {
+                    public void optionalProperty(BeanProperty prop) {
                         process(prop);
                     }
 
                     @Override
-                    public void property(BeanProperty prop) throws JsonMappingException {
+                    public void property(BeanProperty prop) {
                         process(prop);
                     }
                 };
