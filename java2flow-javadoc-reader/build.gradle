@@ -22,11 +22,8 @@ java {
 }
 
 dependencies {
-    implementation project(":java2flow-annotations")
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4.2'
+    implementation project(":java2flow-core")
+    implementation group: 'com.github.javaparser', name: 'javaparser-core', version: '3.24.7'
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
-    testImplementation group: 'org.jetbrains', name: 'annotations', version: '23.0.0'
-    testImplementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
-
 }
