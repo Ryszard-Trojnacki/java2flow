@@ -1,3 +1,5 @@
+![Gradle Build](https://github.com/Ryszard-Trojnacki/java2flow/actions/workflows/gradle.yml/badge.svg)
+
 Library to generate [Flow](https://flow.org/) types from Java classes.
 
 This library is for converting JavaBeans (data structures) to Flow types.
