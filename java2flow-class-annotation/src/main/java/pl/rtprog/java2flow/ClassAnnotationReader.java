@@ -54,20 +54,30 @@ public class ClassAnnotationReader implements JavaAnnotationProvider {
             ClassReader cr = new ClassReader(Objects.requireNonNull(loader != null ? loader.getResourceAsStream(pathName) : ClassLoader.getSystemResourceAsStream(pathName)));
             ClassVisitor cv = new ClassVisitor(Opcodes.ASM9) {
                 @Override
-                public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
-//                    System.out.println("visitTypeAnnotation: "+typePath);
-                    return super.visitTypeAnnotation(typeRef, typePath, descriptor, visible);
-                }
+                public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                    String field;
+                    if(name.length()>2 && name.startsWith("is") && Character.isUpperCase(name.charAt(2))) {
+                        field=Java2FlowUtils.uncapitalize(name.substring(2));
+                    } else if(name.length()>3 && Character.isUpperCase(name.charAt(3))) {
+                        if(name.startsWith("get")) {
+                            if(!descriptor.startsWith("()") || descriptor.equals("()V")) return null;
+//                        } else if(name.startsWith("set")) {   // Only getters
+//                            if(!descriptor.equals(")V")) return null;
+                        }
+                        field=Java2FlowUtils.uncapitalize(name.substring(3));
+                    } else return null;
 
-                @Override
-                public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-//                    System.out.println("Visit: "+name+ " "+signature);
-                    super.visit(version, access, name, signature, superName, interfaces);
+                    return new MethodVisitor(Opcodes.ASM9) {
+                        @Override
+                        public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+                            if(contains(NOT_NULL, descriptor)) res.setNotNull(field);
+                            return null;
+                        }
+                    };
                 }
 
                 @Override
                 public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-//                    System.out.println("VisitField: "+name+ " "+descriptor+" "+ value);
                     return new FieldVisitor(Opcodes.ASM9) {
                         @Override
                         public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
