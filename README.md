@@ -111,7 +111,7 @@ repositories {
 }
 
 dependencies {
-    implementation group: 'pl.rtprog', name: 'java2flow-core', version: '0.0.2-SNAPSHOT'
+    implementation group: 'pl.rtprog', name: 'java2flow-core', version: '0.0.2'
 }
 ```
 and then called from code:
