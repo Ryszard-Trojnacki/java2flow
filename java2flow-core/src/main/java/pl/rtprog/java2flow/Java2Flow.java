@@ -8,9 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
 import com.fasterxml.jackson.databind.type.CollectionType;
-import pl.rtprog.java2flow.interfaces.ClassJavaDoc;
-import pl.rtprog.java2flow.interfaces.FieldJavaDoc;
-import pl.rtprog.java2flow.interfaces.JavaDocProvider;
+import pl.rtprog.java2flow.interfaces.*;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -33,18 +31,24 @@ public class Java2Flow {
 
     private final JavaDocProvider javaDocProvider;
 
+    private final JavaAnnotationProvider javaAnnotationProvider;
+
     /** Already known types */
     protected final HashMap<Class<?>, String> types=new HashMap<>();
 
     protected final StringBuilder out=new StringBuilder(1024);
 
-    public Java2Flow(JavaDocProvider javaDocProvider) {
+    public Java2Flow(JavaDocProvider javaDocProvider, JavaAnnotationProvider javaAnnotationProvider) {
         this.javaDocProvider=javaDocProvider;
+        this.javaAnnotationProvider=javaAnnotationProvider;
         registerCoreTypes();
     }
 
+    /**
+     * Default constructor without any additional providers.
+     */
     public Java2Flow() {
-        this(null);
+        this(null, null);
     }
 
     /**
@@ -179,6 +183,8 @@ public class Java2Flow {
 
         final StringBuilder out=new StringBuilder();
         final ClassJavaDoc javaDoc=javaDocProvider==null?null:javaDocProvider.getComments(type);
+        final ClassAnnotations ca=(javaAnnotationProvider==null)?null: javaAnnotationProvider.get(type);
+
         types.put(type, name);
         if(ft!=null && ft.description().length()>0) {
             out.append("/**\n");
@@ -245,7 +251,7 @@ public class Java2Flow {
                         }
                         out.append(getType(prop.getType().getRawClass(), prop.getType()));
                         if(!prop.getType().isPrimitive()) {
-                            if(!Java2FlowUtils.isNotNull(prop)) {
+                            if(!Java2FlowUtils.isNotNull(prop) && (ca==null || !ca.isNotNull(prop.getName()))) {
                                 out.append("|null");
                             }
                         }

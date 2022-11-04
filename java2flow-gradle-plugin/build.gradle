@@ -16,6 +16,8 @@ repositories {
 dependencies {
     implementation project(":java2flow-core")
     implementation project(":java2flow-javadoc-reader")
+    implementation project(":java2flow-class-annotation")
+
     implementation group: 'org.jetbrains', name: 'annotations', version: '23.0.0'
     implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 

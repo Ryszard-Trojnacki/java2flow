@@ -14,22 +14,24 @@ public class Java2FlowUtils {
     /**
      * Available NotNull annotations in classpath.
      */
-    private final static Class<? extends Annotation> notNulls[];
+    private final static Class<? extends Annotation>[] notNulls;
 
+    @SuppressWarnings("unchecked")
     private static void addIfExists(ArrayList<Class<? extends Annotation>> list, String className) {
         try {
             Class<?> clazz=Class.forName(className);
             if(!clazz.isAnnotation()) return;
             list.add((Class<? extends Annotation>) clazz);
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException ignored) {
         }
     }
 
     static {
         ArrayList<Class<? extends Annotation>> nn=new ArrayList<>();
         nn.add(NotNull.class);
-        addIfExists(nn, "org.jetbrains.annotations.NotNull");   // This will not work, because it is Class RetentionPolicy
+//        addIfExists(nn, "org.jetbrains.annotations.NotNull");   // This will not work, because it is Class RetentionPolicy
         addIfExists(nn, "javax.validation.constraints.NotNull");
+        addIfExists(nn, "io.ebean.annotation.NotNull");
         notNulls=nn.toArray(new Class[0]);
     }
 

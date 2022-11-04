@@ -50,12 +50,7 @@ public abstract class Java2FlowTask extends DefaultTask {
     }
 
     private static List<String> listClasses(String packageName, File dir) {
-        File[] classes=dir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return pathname.getName().endsWith(".class") || pathname.isDirectory();
-            }
-        });
+        File[] classes=dir.listFiles(pathname -> pathname.getName().endsWith(".class") || pathname.isDirectory());
         if(classes==null || classes.length==0) return Collections.emptyList();
         if(!packageName.isEmpty()) packageName+=".";
 
@@ -74,7 +69,7 @@ public abstract class Java2FlowTask extends DefaultTask {
                 }
                 name.append("$").append(p);
             }
-            if(name!=null) res.add(packageName+name.toString());
+            if(name!=null) res.add(packageName+name);
         }
         return res;
     }
@@ -99,7 +94,10 @@ public abstract class Java2FlowTask extends DefaultTask {
             SourceSet main=ssc.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
             File srcDir=main.getJava().getSourceDirectories().getSingleFile();
 
-            Java2Flow jf=new Java2Flow(new JavaDocProcessor(srcDir.toPath()));
+            Java2Flow jf=new Java2Flow(
+                    new JavaDocProcessor(srcDir.toPath()),
+                    new ClassAnnotationReader(classLoader)
+            );
             jf.addHeader();
             List<String> classes=this.getClasses().getOrNull();
             boolean generated=false;
