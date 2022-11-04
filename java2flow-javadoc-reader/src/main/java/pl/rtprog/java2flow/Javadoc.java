@@ -11,7 +11,7 @@ import java.util.Map;
  *
  * @author Ryszard Trojnacki
  */
-public class JavaDoc implements ClassJavaDoc {
+public class Javadoc implements ClassJavaDoc {
     private final Class<?> about;
 
     private String author;
@@ -20,7 +20,7 @@ public class JavaDoc implements ClassJavaDoc {
 
     private Map<String, String> fields;
 
-    public JavaDoc(Class<?> about) {
+    public Javadoc(Class<?> about) {
         this.about = about;
         this.fields=new HashMap<>();
     }
@@ -32,7 +32,7 @@ public class JavaDoc implements ClassJavaDoc {
 
     @Override
     public String getAuthor() {
-        return null;
+        return author;
     }
 
     public void setAuthor(String author) {
@@ -65,7 +65,8 @@ public class JavaDoc implements ClassJavaDoc {
         };
     }
 
-    public void add(String field, String comment) {
+    public void add(String field, String comment, boolean override) {
+        if(!override && fields.containsKey(field)) return;
         fields.put(field, comment);
     }
 }

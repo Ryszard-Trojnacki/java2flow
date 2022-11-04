@@ -9,7 +9,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -95,7 +94,7 @@ public abstract class Java2FlowTask extends DefaultTask {
             File srcDir=main.getJava().getSourceDirectories().getSingleFile();
 
             Java2Flow jf=new Java2Flow(
-                    new JavaDocProcessor(srcDir.toPath()),
+                    new JavadocProcessor(srcDir.toPath()),
                     new ClassAnnotationReader(classLoader)
             );
             jf.addHeader();

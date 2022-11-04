@@ -73,4 +73,14 @@ public class Java2FlowUtils {
             out.append(prefix).append(l).append('\n');
         }
     }
+
+    /**
+     * Uncapitalize input string
+     * @param in string to be uncapitalized
+     * @return uncapitalized string
+     */
+    public static String uncapitalize(String in) {
+        if(in==null || in.length()==0) return in;
+        return Character.toLowerCase(in.charAt(0))+in.substring(1);
+    }
 }
