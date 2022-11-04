@@ -32,8 +32,9 @@ class Java2flowPluginFunctionalTest {
     @Test void canRunTask() throws IOException {
         writeString(getSettingsFile(), "");
         writeString(getBuildFile(),
-                "plugins {" +
-                        "  id('pl.rtprog.java2flow')" +
+                "plugins {\n" +
+                        "  id 'java'\n" +
+                        "  id('pl.rtprog.java2flow')\n" +
                         "}\n\n" +
                         "java2flow {\n" +
                         "generateEmpty = true\n" +

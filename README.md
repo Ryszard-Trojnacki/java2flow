@@ -81,6 +81,7 @@ pluginManagement {
 and now in `build.gradle`:
 ```groovy
 plugins {
+    id 'java'
     id 'pl.rtprog.java2flow' version '0.0.2-SNAPSHOT'
 }
 
