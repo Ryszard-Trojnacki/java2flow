@@ -72,7 +72,7 @@ public abstract class Java2FlowTask extends DefaultTask {
                     name = null;    // anonymous class, skip
                     break;
                 }
-                name.append(".").append(name);
+                name.append("$").append(p);
             }
             if(name!=null) res.add(packageName+name.toString());
         }
@@ -94,7 +94,12 @@ public abstract class Java2FlowTask extends DefaultTask {
         urls.addAll(getFilesFromConfiguration("compileClasspath"));
 
         try (URLClassLoader classLoader = URLClassLoader.newInstance(urls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader())) {
-            Java2Flow jf=new Java2Flow();
+            JavaPluginExtension jpe=getProject().getExtensions().getByType(JavaPluginExtension.class);
+            SourceSetContainer ssc=jpe.getSourceSets();
+            SourceSet main=ssc.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+            File srcDir=main.getJava().getSourceDirectories().getSingleFile();
+
+            Java2Flow jf=new Java2Flow(new JavaDocProcessor(srcDir.toPath()));
             jf.addHeader();
             List<String> classes=this.getClasses().getOrNull();
             boolean generated=false;
@@ -112,20 +117,14 @@ public abstract class Java2FlowTask extends DefaultTask {
             }
             List<String> packages=this.getPackages().getOrNull();
             if(packages!=null) {
-                JavaPluginExtension jpe=getProject().getExtensions().getByType(JavaPluginExtension.class);
-
-                if(jpe!=null) {
-                    SourceSetContainer ssc=jpe.getSourceSets();
-                    SourceSet main=ssc.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-                    for(File f: main.getOutput().getClassesDirs().getFiles()) {
-                        for(String pkg: packages) {
-                            File dir=new File(f, packageToPath(pkg));
-                            for(String cl: listClasses(pkg, dir)) {
-//                                System.out.println("Generating types for: "+cl);
-                                Class<?> c=classLoader.loadClass(cl);
-                                generated=true;
-                                jf.export(c);
-                            }
+                for(File f: main.getOutput().getClassesDirs().getFiles()) {
+                    for(String pkg: packages) {
+                        File dir=new File(f, packageToPath(pkg));
+                        for(String cl: listClasses(pkg, dir)) {
+//                            System.out.println("Generating types for: "+cl);
+                            Class<?> c=classLoader.loadClass(cl);
+                            generated=true;
+                            jf.export(c);
                         }
                     }
                 }

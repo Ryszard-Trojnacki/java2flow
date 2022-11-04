@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
 import com.fasterxml.jackson.databind.type.CollectionType;
+import pl.rtprog.java2flow.interfaces.ClassJavaDoc;
+import pl.rtprog.java2flow.interfaces.FieldJavaDoc;
+import pl.rtprog.java2flow.interfaces.JavaDocProvider;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -28,13 +31,20 @@ import java.util.Map;
 public class Java2Flow {
     private final ObjectMapper mapper=new ObjectMapper();
 
+    private final JavaDocProvider javaDocProvider;
+
     /** Already known types */
     protected final HashMap<Class<?>, String> types=new HashMap<>();
 
     protected final StringBuilder out=new StringBuilder(1024);
 
-    public Java2Flow() {
+    public Java2Flow(JavaDocProvider javaDocProvider) {
+        this.javaDocProvider=javaDocProvider;
         registerCoreTypes();
+    }
+
+    public Java2Flow() {
+        this(null);
     }
 
     /**
@@ -111,6 +121,8 @@ public class Java2Flow {
         String t=types.get(type);
         if(t!=null) return t;
 
+//        System.out.println("Get type for: "+type);
+
         FlowType ft=type.getAnnotation(FlowType.class);
         if(ft!=null && ft.custom().length()>0) {
             String name=getTypename(type);
@@ -166,8 +178,23 @@ public class Java2Flow {
         }
 
         final StringBuilder out=new StringBuilder();
+        final ClassJavaDoc javaDoc=javaDocProvider==null?null:javaDocProvider.getComments(type);
         types.put(type, name);
-        if(ft!=null && ft.description().length()>0) out.append("/**\n * ").append(ft.description()).append("\n **/\n");
+        if(ft!=null && ft.description().length()>0) {
+            out.append("/**\n");
+            Java2FlowUtils.formatOutput(out, " * ", ft.description());
+            out.append(" **/\n");
+        }
+        else if(javaDoc!=null) {
+            if(!Java2FlowUtils.isBlank(javaDoc.getComment())) {
+                out.append("/**\n");
+                Java2FlowUtils.formatOutput(out, " * ", javaDoc.getComment());
+                if(!Java2FlowUtils.isBlank(javaDoc.getAuthor())) {
+                    Java2FlowUtils.formatOutput(out, " * ", javaDoc.getAuthor());
+                }
+                out.append(" **/\n");
+            }
+        }
         out.append("export type ").append(name).append(" =");
         String superClass=null;
         if(type.getSuperclass()!=Object.class) {
@@ -182,6 +209,7 @@ public class Java2Flow {
 
         out.append(" {\n");
 
+
         JsonFormatVisitorWrapper.Base visitor=new JsonFormatVisitorWrapper.Base() {
             @Override
             public JsonObjectFormatVisitor expectObjectFormat(JavaType type) {
@@ -195,7 +223,16 @@ public class Java2Flow {
                         if(fp!=null && fp.value().length()>0) name=fp.value();
 
                         if(fp!=null && fp.description().length()>0) {
-                            out.append("\t/** \n\t  ").append(fp.description()).append("\n\t **/\n");
+                            out.append("\t/** \n");
+                            Java2FlowUtils.formatOutput(out, "\t * ", fp.description());
+                            out.append("\t **/\n");
+                        } else if(javaDoc!=null) {
+                            FieldJavaDoc doc=javaDoc.get(prop.getName());
+                            if(doc!=null && !Java2FlowUtils.isBlank(doc.getComment())) {
+                                out.append("\t/** \n");
+                                Java2FlowUtils.formatOutput(out, "\t * ", doc.getComment());
+                                out.append("\t **/\n");
+                            }
                         }
                         out.append("\t").append(name);
                         JsonInclude ji=prop.getAnnotation(JsonInclude.class);

@@ -39,4 +39,36 @@ public class Java2FlowUtils {
         }
         return false;
     }
+
+    /**
+     * Helper function that returns true if string is empty (is null or length is 0).
+     * @param str string to test
+     * @return true if string is empty (null or length is 0)
+     */
+    public static boolean isEmpty(String str) {
+        return str==null || str.length()==0;
+    }
+
+    /**
+     * Helper function that returns true if string is blank (is null or trimmed length is 0).
+     * @param str string to test
+     * @return true if string is blank (null or trimmed length is 0)
+     */
+    public static boolean isBlank(String str) {
+        return str==null || str.trim().length()==0;
+    }
+
+    /**
+     * Method that appends to output buffer message.
+     * Each line if appended with given prefix.
+     * @param out output buffer
+     * @param prefix prefix to append to each line
+     * @param msg message to append
+     */
+    public static void formatOutput(StringBuilder out, String prefix, String msg) {
+        String[] lines=msg.trim().split("\n");
+        for(String l: lines) {
+            out.append(prefix).append(l).append('\n');
+        }
+    }
 }
