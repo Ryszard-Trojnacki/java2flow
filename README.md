@@ -84,7 +84,7 @@ and now in `build.gradle`:
 ```groovy
 plugins {
     id 'java'
-    id 'pl.rtprog.java2flow' version '0.0.2-SNAPSHOT'
+    id 'pl.rtprog.java2flow' version '0.0.3-SNAPSHOT'
 }
 
 java2flow {
@@ -111,7 +111,7 @@ repositories {
 }
 
 dependencies {
-    implementation group: 'pl.rtprog', name: 'java2flow-core', version: '0.0.2'
+    implementation group: 'pl.rtprog', name: 'java2flow-core', version: '0.0.3-SNAPSHOT'
 }
 ```
 and then called from code:

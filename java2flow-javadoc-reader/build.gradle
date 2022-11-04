@@ -8,14 +8,6 @@ repositories {
     mavenCentral()
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-}
-
 java {
     sourceCompatibility = 8
     targetCompatibility = 8
