@@ -15,11 +15,6 @@ subprojects {
                     }
                 }
             }
-            publications {
-                gpr(MavenPublication) {
-                    from(components.java)
-                }
-            }
         }
     }
 }

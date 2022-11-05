@@ -4,6 +4,15 @@ plugins {
     id 'maven-publish'
 }
 
+publishing {
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
+        }
+    }
+}
+
+
 repositories {
     mavenCentral()
 }
