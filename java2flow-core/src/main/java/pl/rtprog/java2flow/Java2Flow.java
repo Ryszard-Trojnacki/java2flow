@@ -196,7 +196,7 @@ public class Java2Flow {
                 out.append("/**\n");
                 Java2FlowUtils.formatOutput(out, " * ", javaDoc.getComment());
                 if(!Java2FlowUtils.isBlank(javaDoc.getAuthor())) {
-                    Java2FlowUtils.formatOutput(out, " * ", javaDoc.getAuthor());
+                    Java2FlowUtils.formatOutput(out, " * @author ", javaDoc.getAuthor());
                 }
                 out.append(" **/\n");
             }
