@@ -130,7 +130,7 @@ public class Java2Flow {
         FlowType ft=type.getAnnotation(FlowType.class);
         if(ft!=null && ft.custom().length()>0) {
             String name=getTypename(type);
-            out.append("export ").append(name).append(" = ").append(ft.custom()).append('\n');
+            out.append("export type ").append(name).append(" = ").append(ft.custom()).append(";\n\n");
             types.put(type, name);
             return name;
         }
