@@ -3,18 +3,18 @@ subprojects {
     description="Java classes to JavaScript Flow converter/generator"
     version="0.0.3-SNAPSHOT"
 
-    plugins.withType(MavenPublishPlugin) {
-        publishing {
-            repositories {
-                maven {
-                    name = "GitHubPackages"
-                    url = uri("https://maven.pkg.github.com/ryszard-trojnacki/java2flow")
-                    credentials {
-                        username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-                        password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
-                    }
-                }
-            }
-        }
-    }
+//    plugins.withType(MavenPublishPlugin) {
+//        publishing {
+//            repositories {
+//                maven {
+//                    name = "GitHubPackages"
+//                    url = uri("https://maven.pkg.github.com/ryszard-trojnacki/java2flow")
+//                    credentials {
+//                        username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+//                        password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+//                    }
+//                }
+//            }
+//        }
+//    }
 }

@@ -1,7 +1,7 @@
 plugins {
     id 'java-gradle-plugin'
     id 'idea'
-    id 'maven-publish'
+    id 'com.gradle.plugin-publish' version '1.1.0'
 }
 
 java {
@@ -26,12 +26,15 @@ dependencies {
 }
 
 gradlePlugin {
+    website = 'https://github.com/Ryszard-Trojnacki/java2flow'
+    vcsUrl = 'https://github.com/Ryszard-Trojnacki/java2flow'
     plugins {
         java2flow {
             id = 'pl.rtprog.java2flow'
             implementationClass = 'pl.rtprog.java2flow.Java2FlowPlugin'
             displayName = 'Java2Flow Gradle plugin'
             description = 'Gradle plugin for converting Java structures to JavaSript Flow'
+            tags.set([ 'flow', 'flow.org', 'javascript', 'java2javascript', 'java2flow' ])
         }
     }
 }
