@@ -33,7 +33,7 @@ gradlePlugin {
             id = 'pl.rtprog.java2flow'
             implementationClass = 'pl.rtprog.java2flow.Java2FlowPlugin'
             displayName = 'Java2Flow Gradle plugin'
-            description = 'Gradle plugin for converting Java structures to JavaSript Flow'
+            description = 'Gradle plugin for converting Java structures to JavaSript with Flow types'
             tags.set([ 'flow', 'flow.org', 'javascript', 'java2javascript', 'java2flow' ])
         }
     }
