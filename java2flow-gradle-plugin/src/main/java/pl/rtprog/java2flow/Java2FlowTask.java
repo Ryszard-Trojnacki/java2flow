@@ -95,7 +95,9 @@ public abstract class Java2FlowTask extends DefaultTask {
 
             Java2Flow jf=new Java2Flow(
                     new JavadocProcessor(srcDir.toPath()),
-                    new ClassAnnotationReader(classLoader)
+                    new ClassAnnotationReader(classLoader),
+                    true,
+                    true
             );
             jf.addHeader();
             List<String> classes=this.getClasses().getOrNull();

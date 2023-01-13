@@ -61,17 +61,41 @@ public class Java2FlowUtils {
     }
 
     /**
+     * Helper function that returns true if string is not blank (not null and contains not only blank characters).
+     * @param str string to test
+     * @return true if string is not blank
+     */
+    public static boolean isNotBlank(String str) {
+        return str!=null && str.trim().length()>0;
+    }
+
+    /**
      * Method that appends to output buffer message.
      * Each line if appended with given prefix.
      * @param out output buffer
      * @param prefix prefix to append to each line
      * @param msg message to append
+     * @param prefixFirst add (prepend) prefix to first line
+     */
+    public static void formatOutput(StringBuilder out, String prefix, String msg, boolean prefixFirst) {
+        String[] lines=msg.trim().split("\n");
+        boolean first=true;
+        for(String l: lines) {
+            if(prefixFirst || !first) out.append(prefix);
+            if(first) first=false;
+            out.append(l).append('\n');
+        }
+    }
+
+    /**
+     * Call to {@link #formatOutput(StringBuilder, String, String, boolean)} with <code>prefixFirst=true</code>
+     * @see #formatOutput(StringBuilder, String, String, boolean)
+     * @param out output buffer
+     * @param prefix prefix to append to each line
+     * @param msg message to append
      */
     public static void formatOutput(StringBuilder out, String prefix, String msg) {
-        String[] lines=msg.trim().split("\n");
-        for(String l: lines) {
-            out.append(prefix).append(l).append('\n');
-        }
+        formatOutput(out, prefix, msg, true);
     }
 
     /**
@@ -82,5 +106,30 @@ public class Java2FlowUtils {
     public static String uncapitalize(String in) {
         if(in==null || in.length()==0) return in;
         return Character.toLowerCase(in.charAt(0))+in.substring(1);
+    }
+
+    /**
+     * Function that converts multiline string, to format <code> * _line\n</code>
+     * @param sb builder to append JSDoc to
+     * @param comment multiline comment
+     */
+    public static void formatComment(StringBuilder sb, String comment) {
+        if(isBlank(comment)) return;
+        String[] lines=comment.trim().split("\n");
+        for(String l: lines) {
+            sb.append(" * ").append(l).append("\n");
+        }
+    }
+
+    /**
+     * Wrapper around {@link #formatComment(StringBuilder, String)}.
+     * @see #formatComment(StringBuilder, String)
+     * @param comment multiline comment
+     * @return comment in JSDoc comment format
+     */
+    public static String formatComment(String comment) {
+        StringBuilder sb=new StringBuilder();
+        formatComment(sb, comment);
+        return sb.toString();
     }
 }

@@ -28,5 +28,4 @@ dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation group: 'org.jetbrains', name: 'annotations', version: '23.0.0'
     testImplementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
-
 }

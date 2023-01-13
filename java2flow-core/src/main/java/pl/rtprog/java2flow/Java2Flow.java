@@ -17,9 +17,11 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Java types converter to JavaScript Flow types.
@@ -38,9 +40,29 @@ public class Java2Flow {
 
     protected final StringBuilder out=new StringBuilder(1024);
 
-    public Java2Flow(JavaDocProvider javaDocProvider, JavaAnnotationProvider javaAnnotationProvider) {
+    /**
+     * Generate Flow output (types)
+     */
+    protected final boolean flow;
+
+    /**
+     * Generate JSDoc output (types)
+     */
+    protected final boolean jsdoc;
+
+    /**
+     * Constructor for JavaScript generator
+     * @param javaDocProvider Java doc provider to use
+     * @param javaAnnotationProvider Java Annotation provider to use
+     * @param flow should Flow types be generated
+     * @param jsdoc should JSDoc types be generated
+     */
+    public Java2Flow(JavaDocProvider javaDocProvider, JavaAnnotationProvider javaAnnotationProvider, boolean flow, boolean jsdoc) {
         this.javaDocProvider=javaDocProvider;
         this.javaAnnotationProvider=javaAnnotationProvider;
+        this.flow=flow;
+        this.jsdoc=jsdoc;
+        if(!flow && !jsdoc) throw new IllegalArgumentException("At last one generator has to be enabled");
         registerCoreTypes();
     }
 
@@ -48,7 +70,7 @@ public class Java2Flow {
      * Default constructor without any additional providers.
      */
     public Java2Flow() {
-        this(null, null);
+        this(null, null, true, true);
     }
 
     /**
@@ -103,7 +125,7 @@ public class Java2Flow {
      * Override if You want to add something at beaning of the file.
      */
     public void addHeader() {
-        out.append("//@flow\n\n");
+        if(flow) out.append("//@flow\n\n");
     }
 
     private static String getTypename(Class<?> clazz) {
@@ -124,13 +146,18 @@ public class Java2Flow {
     private String getType(Class<?> type, final Type typeInfo) {
         String t=types.get(type);
         if(t!=null) return t;
-
 //        System.out.println("Get type for: "+type);
 
         FlowType ft=type.getAnnotation(FlowType.class);
         if(ft!=null && ft.custom().length()>0) {
             String name=getTypename(type);
-            out.append("export type ").append(name).append(" = ").append(ft.custom()).append(";\n\n");
+            boolean hasDoc=!Java2FlowUtils.isBlank(ft.description()) || jsdoc;
+            if(hasDoc) out.append("/**\n");
+            if(!Java2FlowUtils.isBlank(ft.description())) Java2FlowUtils.formatComment(out, ft.description());
+            if(jsdoc) out.append(" * @typedef {").append(ft.custom()).append("} ").append(name).append("\n");
+            if(hasDoc) out.append(" */\n");
+            if(flow) out.append("export type ").append(name).append(" = ").append(ft.custom()).append(";\n");
+            out.append("\n");
             types.put(type, name);
             return name;
         }
@@ -167,40 +194,40 @@ public class Java2Flow {
 
         // Typed types
         String name=getTypename(type);
-        if(type.isEnum()) {
-            if(ft!=null && ft.description().length()>0) out.append("/**\n * ").append(ft.description()).append("\n **/\n");
-            out.append("export type ").append(name).append(" = ");
-            boolean first=true;
-            for(Object e: type.getEnumConstants()) {
-                if(first) first=false;
-                else out.append("|");
-                out.append('\'').append(((Enum<?>)e).name()).append('\'');
+        final ClassJavaDoc javaDoc=javaDocProvider==null?null:javaDocProvider.getComments(type);
+        final ClassAnnotations ca=(javaAnnotationProvider==null)?null: javaAnnotationProvider.get(type);
+        final StringBuilder comment=new StringBuilder();
+
+        if(ft!=null && Java2FlowUtils.isNotBlank(ft.description())) Java2FlowUtils.formatComment(comment, ft.description());
+        if(javaDoc!=null) {
+            Java2FlowUtils.formatComment(comment, javaDoc.getComment());
+            if(Java2FlowUtils.isNotBlank(javaDoc.getAuthor())) {
+                comment.append(" * @author ").append(javaDoc.getAuthor()).append("\n");
             }
-            out.append(";\n\n");
+        }
+
+        final boolean hasDoc=this.jsdoc || comment.length()>0;
+
+        if(type.isEnum()) {
+            String values=Arrays.stream(type.getEnumConstants())
+                    .map(e -> '\''+((Enum<?>)e).name()+'\'' )
+                    .collect(Collectors.joining("|"));
+
+            if(hasDoc) out.append("/**\n").append(comment);
+            if(this.jsdoc) out.append(" * @typedef {").append(values).append("} ").append(name).append("\n");
+            if(hasDoc) out.append(" */\n");
+
+            if(flow) out.append("export type ").append(name).append(" = ").append(values).append(";\n");
+            out.append("\n");
             types.put(type, name);
             return name;
         }
 
         final StringBuilder out=new StringBuilder();
-        final ClassJavaDoc javaDoc=javaDocProvider==null?null:javaDocProvider.getComments(type);
-        final ClassAnnotations ca=(javaAnnotationProvider==null)?null: javaAnnotationProvider.get(type);
+        final StringBuilder doc=new StringBuilder();
 
         types.put(type, name);
-        if(ft!=null && ft.description().length()>0) {
-            out.append("/**\n");
-            Java2FlowUtils.formatOutput(out, " * ", ft.description());
-            out.append(" **/\n");
-        }
-        else if(javaDoc!=null) {
-            if(!Java2FlowUtils.isBlank(javaDoc.getComment())) {
-                out.append("/**\n");
-                Java2FlowUtils.formatOutput(out, " * ", javaDoc.getComment());
-                if(!Java2FlowUtils.isBlank(javaDoc.getAuthor())) {
-                    Java2FlowUtils.formatOutput(out, " * @author ", javaDoc.getAuthor());
-                }
-                out.append(" **/\n");
-            }
-        }
+
         out.append("export type ").append(name).append(" =");
         String superClass=null;
         if(type.getSuperclass()!=Object.class) {
@@ -215,6 +242,15 @@ public class Java2Flow {
 
         out.append(" {\n");
 
+        if(hasDoc) doc.append("/**\n");
+
+        if(jsdoc) {
+            if(hasParentClass) doc.append(" * @typedef {Object} ").append(name).append("_Int").append('\n');
+            else {
+                doc.append(comment);
+                doc.append(" * @typedef {Object} ").append(name).append('\n');
+            }
+        }
 
         JsonFormatVisitorWrapper.Base visitor=new JsonFormatVisitorWrapper.Base() {
             @Override
@@ -228,34 +264,52 @@ public class Java2Flow {
                         FlowProperty fp=prop.getAnnotation(FlowProperty.class);
                         if(fp!=null && fp.value().length()>0) name=fp.value();
 
+                        String comment=null;
                         if(fp!=null && fp.description().length()>0) {
-                            out.append("\t/** \n");
-                            Java2FlowUtils.formatOutput(out, "\t * ", fp.description());
-                            out.append("\t **/\n");
+                            comment=fp.description();
                         } else if(javaDoc!=null) {
                             FieldJavaDoc doc=javaDoc.get(prop.getName());
                             if(doc!=null && !Java2FlowUtils.isBlank(doc.getComment())) {
-                                out.append("\t/** \n");
-                                Java2FlowUtils.formatOutput(out, "\t * ", doc.getComment());
-                                out.append("\t **/\n");
+                                comment=doc.getComment();
                             }
                         }
-                        out.append("\t").append(name);
+                        if(comment!=null) {
+                            out.append("\t/**\n");
+                            Java2FlowUtils.formatOutput(out, "\t * ", comment);
+                            out.append("\t */\n");
+                        }
+
                         JsonInclude ji=prop.getAnnotation(JsonInclude.class);
-                        if(ji!=null && ji.value()!= JsonInclude.Include.ALWAYS) out.append('?');
+                        final boolean optional=ji!=null && ji.value()!= JsonInclude.Include.ALWAYS;
+
+                        out.append("\t").append(name);
+                        if(optional) out.append('?');
                         out.append(": ");
 
+                        String type;
+
                         if(fp!=null && fp.custom().length()>0) {
-                            out.append(fp.custom()).append(";\n");
-                            return;
-                        }
-                        out.append(getType(prop.getType().getRawClass(), prop.getType()));
-                        if(!prop.getType().isPrimitive()) {
-                            if(!Java2FlowUtils.isNotNull(prop) && (ca==null || !ca.isNotNull(prop.getName()))) {
-                                out.append("|null");
+                            type=fp.custom();
+                        } else {
+                            type=getType(prop.getType().getRawClass(), prop.getType());
+                            if (!prop.getType().isPrimitive()) {
+                                if (!Java2FlowUtils.isNotNull(prop) && (ca == null || !ca.isNotNull(prop.getName()))) {
+                                    type+="|null";
+                                }
                             }
                         }
-                        out.append(";\n");
+
+                        out.append(type).append(";\n");
+                        if(jsdoc) {
+                            doc.append(" * @property {").append(type).append("} ");
+                            if(optional) doc.append('[');
+                            doc.append(name);
+                            if(optional) doc.append(']');
+                            if(comment!=null) {
+                                doc.append(' ');
+                                Java2FlowUtils.formatOutput(doc, " * ", comment, false);
+                            } else doc.append('\n');
+                        }
                     }
 
                     @Override
@@ -275,8 +329,21 @@ public class Java2Flow {
         } catch (JsonMappingException e) {
             throw new RuntimeException(e);
         }
-        out.append("};\n\n");
-        this.out.append(out);
+        out.append("};\n");
+
+        if(jsdoc && hasParentClass) {
+            doc.append(comment);
+            doc.append(" *\n * @typedef {")
+                    .append(superClass).append(" & ").append(name).append("_Int").append("} ")
+                    .append(name).append("\n");
+        }
+
+        if(hasDoc) doc.append(" */\n");
+
+        this.out.append(doc);
+        if(flow) this.out.append(out);
+        this.out.append("\n");
+
         return name;
     }
 
