@@ -21,32 +21,59 @@ subprojects {
         }
 
         publishing {
-            publications {
-                gpr(MavenPublication) {
-                    from(components.java)
+            repositories {
+                maven {
+                    url=version.endsWith('SNAPSHOT')?"https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                            :"https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+                    credentials {
+                        username= ossrhUsername
+                        password= findProperty('ossrhPassword')
+                    }
                 }
             }
+
+            publications {
+                mavenJava(MavenPublication) {
+                    from(components.java)
+                    artifact sourcesJar
+                    artifact javadocJar
+
+                    pom {
+                        url = 'https://github.com/Ryszard-Trojnacki/java2flow'
+                        licenses {
+                            license {
+                                name = 'The Apache License, Version 2.0'
+                                url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            }
+                        }
+                        developers {
+                            developer {
+                                id = 'ryszard-trojnacki'
+                                name = 'Ryszard Trojnacki'
+                                email = 'ryszard.trojnacki@gmail.com'
+                            }
+                        }
+                        scm {
+                            connection = 'scm:git://github.com/Ryszard-Trojnacki/java2flow.git'
+                            developerConnection = 'scm:git://github.com/Ryszard-Trojnacki/java2flow.git'
+                            url = 'https://github.com/Ryszard-Trojnacki/java2flow'
+                        }
+                    }
+
+                }
+            }
+
+
         }
+
+
     }
 
     plugins.withType(SigningPlugin) {
         signing {
-            sign configurations.archives
+            sign publishing.publications.mavenJava
+//            sign configurations.archives
         }
     }
-
-//    plugins.withType(MavenPublishPlugin) {
-//        publishing {
-//            repositories {
-//                maven {
-//                    name = "GitHubPackages"
-//                    url = uri("https://maven.pkg.github.com/ryszard-trojnacki/java2flow")
-//                    credentials {
-//                        username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-//                        password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
-//                    }
-//                }
-//            }
-//        }
-//    }
 }
