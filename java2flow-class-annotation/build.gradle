@@ -2,14 +2,7 @@ plugins {
     id 'java-library'
     id 'idea'
     id 'maven-publish'
-}
-
-publishing {
-    publications {
-        gpr(MavenPublication) {
-            from(components.java)
-        }
-    }
+    id 'signing'
 }
 
 repositories {

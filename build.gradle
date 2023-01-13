@@ -3,6 +3,38 @@ subprojects {
     description="Java classes to JavaScript Flow types converter/generator"
     version="0.0.3-SNAPSHOT"
 
+    plugins.withType(JavaPlugin) {
+        task javadocJar(type: Jar) {
+            archiveClassifier = 'javadoc'
+            from javadoc
+        }
+
+        task sourcesJar(type: Jar) {
+            archiveClassifier = 'sources'
+            from sourceSets.main.allSource
+        }
+    }
+
+    plugins.withType(MavenPublishPlugin) {
+        artifacts {
+            archives javadocJar, sourcesJar
+        }
+
+        publishing {
+            publications {
+                gpr(MavenPublication) {
+                    from(components.java)
+                }
+            }
+        }
+    }
+
+    plugins.withType(SigningPlugin) {
+        signing {
+            sign configurations.archives
+        }
+    }
+
 //    plugins.withType(MavenPublishPlugin) {
 //        publishing {
 //            repositories {
