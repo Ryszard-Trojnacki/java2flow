@@ -99,7 +99,9 @@ java2flow {
 Gradle plugin options:
 - `output` - generated Flow types file name; default `${buildDir}/types.js`,
 - `classes` - array of class names to be converted to Flow types,
-- `packages` - array of packages to convert classes that are in them to Flow types.
+- `packages` - array of packages to convert classes that are in them to Flow types,
+- `flow` - should Flow types be generated (default `true`),
+- `jsdoc` - should JSDoc types be generated (default `false`).
 
 
 # Runtime usage

@@ -8,6 +8,6 @@ public class Java2FlowUtilsTest {
 
     @Test
     public void formatComment() {
-        assertEquals(" * comment line 1", Java2FlowUtils.formatComment("comment line 1"));
+        assertEquals(" * comment line 1\n", Java2FlowUtils.formatComment("comment line 1"));
     }
 }

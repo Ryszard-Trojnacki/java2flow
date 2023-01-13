@@ -19,6 +19,8 @@ public class Java2FlowPlugin implements Plugin<Project> {
             t.getOutput().set(ext.getOutput());
             t.getGenerateEmpty().set(ext.getGenerateEmpty());
             t.getPackages().set(ext.getPackages());
+            t.getGenerateFlow().set(ext.getFlow());
+            t.getGenerateJSDoc().set(ext.getJSDoc());
         });
 
         for(Task t: project.getTasks()) {

@@ -15,15 +15,55 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+/**
+ * Implementation of Gradle task for generating types.
+ *
+ * @author Ryszard Trojnacki
+ */
 public abstract class Java2FlowTask extends DefaultTask {
+    /**
+     * Configuration for package names or class names for which
+     * there should be generated Flow file.
+     * @return list of classes for which should be generated output
+     */
     @Input @Optional
     abstract public ListProperty<String> getClasses();
+
+    /**
+     * Should empty file be generated?
+     * @return true if empty file should be also generated
+     */
     @Input @Optional
     abstract public Property<Boolean> getGenerateEmpty();
+
+    /**
+     * JavaScript Flow output file
+     * @return output filename
+     */
     @OutputFile @Optional
     abstract public Property<String> getOutput();
+
+    /**
+     * Packaged to scan for classes and generate Flow types.
+     * @return list of packages for generate flow types
+     * @see Java2FlowExtension#getPackages()
+     */
     @Input @Optional
     abstract public ListProperty<String> getPackages();
+
+    /**
+     * Should Flow types be generated
+     * @return true if Flow types should be generated
+     */
+    @Input @Optional
+    abstract public Property<Boolean> getGenerateFlow();
+
+    /**
+     * Should JSDoc types be generated
+     * @return true if JSDoc types should be generated
+     */
+    @Input @Optional
+    abstract public Property<Boolean> getGenerateJSDoc();
 
 
     private List<URL> getFilesFromConfiguration(String configuration) {
@@ -73,6 +113,10 @@ public abstract class Java2FlowTask extends DefaultTask {
         return res;
     }
 
+    /**
+     * Main method that generates output file with types.
+     * @throws Exception exception if something goes wrong
+     */
     @TaskAction
     public void generate() throws Exception {
         final Set<URL> urls = new LinkedHashSet<>();
@@ -96,8 +140,8 @@ public abstract class Java2FlowTask extends DefaultTask {
             Java2Flow jf=new Java2Flow(
                     new JavadocProcessor(srcDir.toPath()),
                     new ClassAnnotationReader(classLoader),
-                    true,
-                    true
+                    this.getGenerateFlow().getOrElse(true),
+                    this.getGenerateJSDoc().getOrElse(false)
             );
             jf.addHeader();
             List<String> classes=this.getClasses().getOrNull();
