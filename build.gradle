@@ -16,9 +16,10 @@ subprojects {
     }
 
     plugins.withType(MavenPublishPlugin) {
-        artifacts {
-            archives javadocJar, sourcesJar
-        }
+//        artifacts {
+//            archives javadocJar, sourcesJar
+//        }
+        if(name=="java2flow-gradle-plugin") return;
 
         publishing {
             repositories {
@@ -28,7 +29,7 @@ subprojects {
 
                     credentials {
                         username= ossrhUsername
-                        password= findProperty('ossrhPassword')
+                        password= ossrhPassword
                     }
                 }
             }
@@ -41,6 +42,7 @@ subprojects {
 
                     pom {
                         url = 'https://github.com/Ryszard-Trojnacki/java2flow'
+                        packaging = 'jar'
                         licenses {
                             license {
                                 name = 'The Apache License, Version 2.0'
@@ -63,11 +65,7 @@ subprojects {
 
                 }
             }
-
-
         }
-
-
     }
 
     plugins.withType(SigningPlugin) {
