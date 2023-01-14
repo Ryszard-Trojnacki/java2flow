@@ -250,7 +250,7 @@ public class Java2Flow {
                 doc.append(comment);
                 doc.append(" * @typedef {Object} ").append(name).append('\n');
             }
-        }
+        } else if(hasDoc) doc.append(comment);
 
         JsonFormatVisitorWrapper.Base visitor=new JsonFormatVisitorWrapper.Base() {
             @Override

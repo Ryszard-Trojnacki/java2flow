@@ -29,19 +29,19 @@ public interface Java2FlowExtension {
 
     /**
      * Should empty file be generated?
-     * @return true if empty file should be also generated
+     * @return boolean true if empty file should be also generated
      */
     Property<Boolean> getGenerateEmpty();
 
     /**
      * Should Flow types be generated
-     * @return true if Flow types should be generated
+     * @return boolean true if Flow types should be generated
      */
     Property<Boolean> getFlow();
 
     /**
      * Should JSDoc types be generated
-     * @return true if JSDoc types should be generated
+     * @return boolean true if JSDoc types should be generated
      */
-    Property<Boolean> getJSDoc();
+    Property<Boolean> getJsdoc();
 }
