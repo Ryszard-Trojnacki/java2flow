@@ -69,9 +69,10 @@ subprojects {
     }
 
     plugins.withType(SigningPlugin) {
-        signing {
-            sign publishing.publications.mavenJava
-//            sign configurations.archives
+        if(findProperty('ossrhUsername')!=null) {
+            signing {
+                sign publishing.publications.mavenJava
+            }
         }
     }
 }
