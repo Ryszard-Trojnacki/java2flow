@@ -4,10 +4,7 @@ import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.javadoc.JavadocBlockTag;
@@ -47,11 +44,12 @@ public class JavadocProcessor implements JavaDocProvider {
     }
 
     private static String getClassName(Node n) {
-        if(n instanceof ClassOrInterfaceDeclaration) {
-            ClassOrInterfaceDeclaration cn=(ClassOrInterfaceDeclaration)n;
-            if(cn.getFullyQualifiedName().isPresent()) return cn.getFullyQualifiedName().get();
-        } else if(n instanceof MethodDeclaration || n instanceof FieldDeclaration) {
-            if(n.getParentNode().isPresent()) return getClassName(n.getParentNode().get());
+        if(n==null) return null;
+        if(n instanceof ClassOrInterfaceDeclaration || n instanceof EnumDeclaration) {
+            TypeDeclaration<?> t=(TypeDeclaration<?>)n;
+            return t.getFullyQualifiedName().orElse(null);
+        } else if(n instanceof MethodDeclaration || n instanceof FieldDeclaration || n instanceof EnumConstantDeclaration) {
+            return getClassName(n.getParentNode().orElse(null));
         }
         return null;
     }
@@ -84,7 +82,7 @@ public class JavadocProcessor implements JavaDocProvider {
                 if(fullyQualifiedName.equals(owner)) {
                     com.github.javaparser.javadoc.Javadoc p = jd.parse();
 
-                    if (n instanceof ClassOrInterfaceDeclaration) {
+                    if (n instanceof ClassOrInterfaceDeclaration || n instanceof EnumDeclaration) {
                         doc.setComment(p.getDescription().toText());
                         doc.setAuthor(getAuthor(p));
                     } else if (n instanceof FieldDeclaration) {
@@ -114,6 +112,15 @@ public class JavadocProcessor implements JavaDocProvider {
                             }
                         }
 //                        System.out.println("Method: " + name+" -> "+ md.getType()+ " ("+md.getParameters()+")");
+                    } else if(n instanceof EnumConstantDeclaration) {
+                        EnumConstantDeclaration ec=(EnumConstantDeclaration) n;
+                        if(ec.getComment().isPresent() && ec.getComment().get() instanceof JavadocComment) {
+                            String comment=p.toText();
+                            if(Java2FlowUtils.isNotBlank(comment)) {
+                                String name=ec.getNameAsString();
+                                doc.add(name, comment, false);
+                            }
+                        }
                     }
                 }
             }

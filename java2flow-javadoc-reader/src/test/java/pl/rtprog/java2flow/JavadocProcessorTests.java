@@ -74,4 +74,13 @@ public class JavadocProcessorTests {
         assertEquals("Getter for private field", res.get("privateString").getComment().trim());
         assertNull(res.get("publicString"));
     }
+
+    @Test
+    public void enumJavadocTest() {
+        JavadocProcessor proc=new JavadocProcessor(Paths.get("src","test","java").toAbsolutePath());
+        ClassJavaDoc res=proc.getComments(EnumWithJavadoc.class);
+        assertNotNull(res);
+        assertEquals("Example enum javadoc.", res.getComment());
+        assertEquals("Value1 javadoc", res.get("Value1").getComment().trim());
+    }
 }
