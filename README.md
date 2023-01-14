@@ -1,9 +1,9 @@
 ![Gradle Build](https://github.com/Ryszard-Trojnacki/java2flow/actions/workflows/gradle.yml/badge.svg)
 
-Library to generate [Flow](https://flow.org/) types from Java classes.
+Library to generate [Flow](https://flow.org/) and [JSDoc](https://jsdoc.app/) types from Java classes.
 
-This library is for converting JavaBeans (data structures) to Flow types.
-It can be useful when developing software with Java backend and JavaScript (Flow) frontend.
+This library is for converting JavaBeans (data structures) to Flow/JSDoc types.
+It can be useful when developing software with Java backend and JavaScript (Flow/JSDoc) frontend.
 
 Library uses [Jackson](https://github.com/FasterXML/jackson) to processing JavaBeans, 
 [JavaParser](https://github.com/javaparser/javaparser) for reading JavaDoc from source classes,
