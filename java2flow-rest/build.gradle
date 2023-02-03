@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'maven-publish'
+    id 'signing'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = 8
+    targetCompatibility = 8
+}
+
+dependencies {
+    implementation project(":java2flow-core")
+    implementation group: 'org.jboss.resteasy', name: 'jaxrs-api', version: '3.0.12.Final'
+
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+
+}
