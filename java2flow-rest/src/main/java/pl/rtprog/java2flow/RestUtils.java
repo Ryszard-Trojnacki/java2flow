@@ -1,8 +1,12 @@
 package pl.rtprog.java2flow;
 
+import pl.rtprog.java2flow.structs.NamedTypeInfo;
+
 import javax.ws.rs.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Helper method for processing REST API.
@@ -86,6 +90,31 @@ public class RestUtils {
             if(path1.endsWith("/")) return path1+path2;
             else return path1+'/'+path2;
         }
+    }
+
+    /**
+     * Method finds parameters with {@link FormParam}.
+     * @param method method for which find {@link FormParam}
+     * @return list of found {@link FormParam} in {@link NamedTypeInfo} form.
+     */
+    public static List<NamedTypeInfo> getFormParams(Method method) {
+        ArrayList<NamedTypeInfo> res=new ArrayList<>();
+        for(int i=0;i<method.getParameterCount();++i) {
+            FormParam p=RestUtils.find(method.getParameterAnnotations()[i], FormParam.class);
+            if(p==null) continue;   // not a FormParam
+            res.add(NamedTypeInfo.forParameter(method, p.value(), i));
+        }
+        return res;
+    }
+
+    public static List<NamedTypeInfo> getQueryParams(Method method) {
+        ArrayList<NamedTypeInfo> res=new ArrayList<>();
+        for(int i=0;i<method.getParameterCount();++i) {
+            QueryParam p=RestUtils.find(method.getParameterAnnotations()[i], QueryParam.class);
+            if(p==null) continue;   // not a FormParam
+            res.add(NamedTypeInfo.forParameter(method, p.value(), i));
+        }
+        return res;
     }
 
 }

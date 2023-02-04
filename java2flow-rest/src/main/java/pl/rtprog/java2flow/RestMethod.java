@@ -4,6 +4,7 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 
 /**
  * Class that holds information about REST API call.
@@ -47,6 +48,8 @@ public class RestMethod {
      */
     private final PathItem[] fragments;
 
+    private final boolean pathVariables;
+
 
     private RestMethod(Class<?> clazz, Method method, String type, String path, Type body, Type result, PathItem[] fragments) {
         this.clazz = clazz;
@@ -56,8 +59,40 @@ public class RestMethod {
         this.body = body;
         this.result = result;
         this.fragments = fragments;
+        this.pathVariables= fragments!=null && Arrays.stream(fragments).anyMatch(f -> f instanceof PathItem.ParamPathItem);
     }
 
+    public Class<?> getClazz() {
+        return clazz;
+    }
+
+    public Method getMethod() {
+        return method;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public Type getBody() {
+        return body;
+    }
+
+    public Type getResult() {
+        return result;
+    }
+
+    public PathItem[] getFragments() {
+        return fragments;
+    }
+
+    public boolean hasPathVariables() {
+        return pathVariables;
+    }
 
     public static RestMethod of(Method method) throws IllegalArgumentException {
         Class<?> owner=method.getDeclaringClass();
@@ -78,7 +113,13 @@ public class RestMethod {
             }
             int pi=RestUtils.findPathParam(method, name);
             if(pi==-1) throw new IllegalArgumentException("Missing @PathParam for '"+name+"' in method "+method.getName());
-            fragments[i]=PathItem.of(name, method.getGenericParameterTypes()[pi]);
+            fragments[i]=PathItem.of(
+                    method.getParameterTypes()[pi],
+                    method.getGenericParameterTypes()[pi],
+                    method.getAnnotatedParameterTypes()[pi],
+                    method.getParameterAnnotations()[pi],
+                    name
+            );
         }
 
         return new RestMethod(

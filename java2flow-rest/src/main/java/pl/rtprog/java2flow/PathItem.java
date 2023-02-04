@@ -1,5 +1,9 @@
 package pl.rtprog.java2flow;
 
+import pl.rtprog.java2flow.structs.NamedTypeInfo;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Type;
 
 /**
@@ -28,20 +32,9 @@ public interface PathItem {
         }
     }
 
-    class ParamPathItem implements PathItem {
-        /**
-         * Variable name
-         */
-        private final String name;
-
-        /**
-         * Type information about path item
-         */
-        private final Type type;
-
-        public ParamPathItem(String name, Type type) {
-            this.name = name;
-            this.type = type;
+    class ParamPathItem extends NamedTypeInfo implements PathItem {
+        public ParamPathItem(Class<?> clazz, Type type, AnnotatedType annotatedType, Annotation[] annotations, String name) {
+            super(clazz, type, annotatedType, annotations, name);
         }
     }
 
@@ -50,7 +43,7 @@ public interface PathItem {
         return new ConstPathItem(value);
     }
 
-    static ParamPathItem of(String name, Type type) {
-        return new ParamPathItem(name, type);
+    static ParamPathItem of(Class<?> clazz, Type type, AnnotatedType annotatedType, Annotation[] annotations, String name) {
+        return new ParamPathItem(clazz, type, annotatedType, annotations, name);
     }
 }

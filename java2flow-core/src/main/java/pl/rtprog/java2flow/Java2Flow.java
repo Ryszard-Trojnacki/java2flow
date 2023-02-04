@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrappe
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import pl.rtprog.java2flow.interfaces.*;
+import pl.rtprog.java2flow.structs.JavaTypeInfo;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -353,6 +354,18 @@ public class Java2Flow {
      */
     public void export(Class<?> type) {
         getType(type, type);
+    }
+
+    public String getJavaScriptType(Class<?> type, Type typeInfo) {
+        return getType(type, typeInfo);
+    }
+
+    public String getJavaScriptType(Class<?> type) {
+        return getType(type, type);
+    }
+
+    public String getJavaScriptType(JavaTypeInfo type) {
+        return getType(type.getClazz(), type.getType()==null?type.getClazz():type.getType());
     }
 
     public String toString() {
