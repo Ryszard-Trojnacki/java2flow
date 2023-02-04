@@ -1,88 +1,140 @@
 package pl.rtprog.java2flow.js;
 
+import java.io.IOException;
+
 /**
  * Helper class for generating JavaScript code.
  */
 public class JsGenerator {
-    private final StringBuilder sb;
+    private final Appendable sb;
+    /**
+     * Line buffer
+     */
+    private final StringBuilder line=new StringBuilder(128);
+
+    private final String identText="\t";
+
+    private final boolean flow;
+    private final boolean jsdoc;
+
+    private boolean header=false;
+
     /**
      * Current ident for code/comments
      */
     private int ident=0;
 
-    public JsGenerator(StringBuilder sb, int ident) {
+
+    public JsGenerator(Appendable sb, int ident, boolean flow, boolean jsdoc) {
         this.sb = sb;
         this.ident = ident;
+        this.flow=flow;
+        this.jsdoc=jsdoc;
     }
 
-    public JsGenerator() {
-        this.sb=new StringBuilder(1024);
+
+    public boolean isFlow() {
+        return flow;
     }
 
-    public JsGenerator append(char[] str) {
-        sb.append(str);
+    public boolean isJsdoc() {
+        return jsdoc;
+    }
+
+    private void flushLine(CharSequence line) {
+        try {
+            for(int i=0;i<ident;++i) sb.append(identText);
+            sb.append(line);
+            sb.append('\n');
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void append(CharSequence value) {
+        if(value==null || value.length()==0) return;
+        int st=0;
+
+        for(int i=0;i<value.length();++i) {
+            if(value.charAt(i)=='\n') {
+                if(line.length()==0) flushLine(value.subSequence(st, i));
+                else {
+                    line.append(value.subSequence(st, i));
+                    flushLine(line);
+                    line.setLength(0);
+                }
+                st=i+1;
+            }
+        }
+        if(st==0) line.append(value);
+        else if(st<value.length()) line.append(value.subSequence(st, value.length()));
+    }
+
+    public JsGenerator enter() {
+        ++ident;
         return this;
     }
 
-    public JsGenerator append(char[] str, int offset, int len) {
-        sb.append(str, offset, len);
+    public JsGenerator leave() {
+        --ident;
         return this;
     }
 
-    public JsGenerator append(boolean b) {
-        sb.append(b);
+    public JsGenerator a(CharSequence value) {
+        append(value);
         return this;
     }
 
-    public JsGenerator append(char c) {
-        sb.append(c);
+    public JsGenerator a(char c) {
+        if(c=='\n') {
+            flushLine(line);
+            line.setLength(0);
+        } else {
+            line.append(c);
+        }
         return this;
     }
 
-    public JsGenerator append(int i) {
-        sb.append(i);
+    public JsGenerator a(int value) {
+        append(String.valueOf(value));
         return this;
     }
 
-    public JsGenerator append(long lng) {
-        sb.append(lng);
+    public JsGenerator ln(String value) {
+        append(value);
+        flushLine(line);
+        line.setLength(0);
         return this;
     }
 
-    public JsGenerator append(float f) {
-        sb.append(f);
+    public void close() {
+        if(line.length()>0) {
+            flushLine(line);
+            line.setLength(0);
+        }
+    }
+
+    public JsGenerator eol() {
+        flushLine(line);
+        line.setLength(0);
         return this;
     }
 
-    public JsGenerator append(double d) {
-        sb.append(d);
+    public JsGenerator flow(String v) {
+        if(flow) append(v);
         return this;
     }
 
-    public JsGenerator appendCodePoint(int codePoint) {
-        sb.appendCodePoint(codePoint);
+    public JsGenerator jsdoc(String v) {
+        if(jsdoc) append(v);
         return this;
     }
 
-    public int length() {
-        return sb.length();
-    }
-
-    public char charAt(int index) {
-        return sb.charAt(index);
-    }
-
-    public int codePointAt(int index) {
-        return sb.codePointAt(index);
-    }
-
-    public JsGenerator append(String str) {
-        sb.append(str);
+    public JsGenerator addHeader() {
+        if(header) return this;
+        header=true;
+        if(flow) ln("//@flow").eol();
         return this;
     }
 
-    public JsGenerator append(StringBuffer sb) {
-        sb.append(sb);
-        return this;
-    }
 }

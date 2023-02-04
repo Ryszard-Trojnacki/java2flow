@@ -1,5 +1,7 @@
 package pl.rtprog.java2flow;
 
+import pl.rtprog.java2flow.structs.JavaTypeInfo;
+
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import java.lang.reflect.Method;
@@ -36,22 +38,22 @@ public class RestMethod {
     /**
      * Body type or null if no body.
      */
-    private final Type body;
+    private final JavaTypeInfo body;
 
     /**
      * Result type of API call.
      */
-    private final Type result;
+    private final JavaTypeInfo result;
 
     /**
      * Path split into fragments
      */
-    private final PathItem[] fragments;
+    private final PathFragment[] fragments;
 
     private final boolean pathVariables;
 
 
-    private RestMethod(Class<?> clazz, Method method, String type, String path, Type body, Type result, PathItem[] fragments) {
+    private RestMethod(Class<?> clazz, Method method, String type, String path, JavaTypeInfo body, JavaTypeInfo result, PathFragment[] fragments) {
         this.clazz = clazz;
         this.method = method;
         this.type = type;
@@ -59,7 +61,7 @@ public class RestMethod {
         this.body = body;
         this.result = result;
         this.fragments = fragments;
-        this.pathVariables= fragments!=null && Arrays.stream(fragments).anyMatch(f -> f instanceof PathItem.ParamPathItem);
+        this.pathVariables= fragments!=null && Arrays.stream(fragments).anyMatch(f -> f instanceof PathFragment.ParamPathFragment);
     }
 
     public Class<?> getClazz() {
@@ -78,15 +80,15 @@ public class RestMethod {
         return path;
     }
 
-    public Type getBody() {
+    public JavaTypeInfo getBody() {
         return body;
     }
 
-    public Type getResult() {
+    public JavaTypeInfo getResult() {
         return result;
     }
 
-    public PathItem[] getFragments() {
+    public PathFragment[] getFragments() {
         return fragments;
     }
 
@@ -103,17 +105,17 @@ public class RestMethod {
         if(type==null) throw new IllegalArgumentException("Missing method type (@GET, @POST, @PUT, @HEAD, @DELETE, @OPTION) annotation at method "+method.getName());
         String path=classPath.value()+(methodPath!=null?"/"+methodPath.value():"");
         String[] strFragments=path.split("/");
-        PathItem[] fragments=new PathItem[strFragments.length];
+        PathFragment[] fragments=new PathFragment[strFragments.length];
         for(int i=0;i<strFragments.length;++i) {
             String str=strFragments[i];
             String name=RestUtils.isVariable(str);
             if(name==null) {    // not a variable path fragment
-                fragments[i]=PathItem.of(str);
+                fragments[i]= PathFragment.of(str);
                 continue;
             }
             int pi=RestUtils.findPathParam(method, name);
             if(pi==-1) throw new IllegalArgumentException("Missing @PathParam for '"+name+"' in method "+method.getName());
-            fragments[i]=PathItem.of(
+            fragments[i]= PathFragment.of(
                     method.getParameterTypes()[pi],
                     method.getGenericParameterTypes()[pi],
                     method.getAnnotatedParameterTypes()[pi],
@@ -125,7 +127,7 @@ public class RestMethod {
         return new RestMethod(
                 owner, method, type, path,
                 null,
-                method.getGenericReturnType(),
+                JavaTypeInfo.returnOf(method),
                 fragments
         );
 

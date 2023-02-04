@@ -108,6 +108,11 @@ public class Java2FlowUtils {
         return Character.toLowerCase(in.charAt(0))+in.substring(1);
     }
 
+    public static String capitalize(String in) {
+        if(in==null || in.length()==0) return in;
+        return Character.toUpperCase(in.charAt(0))+in.substring(1);
+    }
+
     /**
      * Function that converts multiline string, to format <code> * _line\n</code>
      * @param sb builder to append JSDoc to
