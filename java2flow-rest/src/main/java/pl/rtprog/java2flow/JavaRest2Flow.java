@@ -1,7 +1,6 @@
 package pl.rtprog.java2flow;
 
 import javax.ws.rs.*;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -38,12 +37,12 @@ public class JavaRest2Flow {
         HashMap<String, Type> params=new HashMap<>();
         for(int i=0;i<method.getParameterCount();++i) {
             Type pt=method.getGenericParameterTypes()[i];
-            PathParam pp=JavaRest2FlowUtils.find(method.getParameterAnnotations()[i], PathParam.class);
+            PathParam pp= RestUtils.find(method.getParameterAnnotations()[i], PathParam.class);
 
         }
 
         for(String p: parts) {
-            String v=JavaRest2FlowUtils.isVariable(p);
+            String v= RestUtils.isVariable(p);
 
         }
     }
@@ -52,24 +51,7 @@ public class JavaRest2Flow {
         Path path=restClass.getAnnotation(Path.class);
         if(path==null) return;
         for(Method m: restClass.getMethods()) {
-            Path methodPath=m.getAnnotation(Path.class);
-            if(methodPath==null) continue;
-            String[] parts=methodPath.value().split("/");
 
-
-            String fullPath="/"+path.value()+"/"+methodPath.value();
-
-            if(m.isAnnotationPresent(GET.class)) {
-
-            } else if(m.isAnnotationPresent(POST.class)) {
-
-            } else if(m.isAnnotationPresent(PUT.class)) {
-
-            } else if(m.isAnnotationPresent(HEAD.class)) {
-
-            } else if(m.isAnnotationPresent(DELETE.class)) {
-
-            }
         }
     }
 }
