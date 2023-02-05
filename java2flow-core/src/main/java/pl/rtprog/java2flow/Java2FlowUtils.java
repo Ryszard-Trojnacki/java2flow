@@ -137,4 +137,11 @@ public class Java2FlowUtils {
         formatComment(sb, comment);
         return sb.toString();
     }
+
+    public static boolean isJavaScriptType(String type) {
+        return "string".equals(type) || "number".equals(type) || "Object".equals(type) ||
+                "boolean".equals(type) || "symbol".equals(type) || "object".equals(type) ||
+                "bigint".equals(type) || "BigInt".equals(type) || "Number".equals(type) ||
+                "String".equals(type) || "Date".equals(type) || "Boolean".equals(type);
+    }
 }

@@ -130,11 +130,11 @@ public class JsGenerator {
         return this;
     }
 
-    public JsGenerator addHeader() {
-        if(header) return this;
+    public boolean addHeader() {
+        if(header) return false;
         header=true;
         if(flow) ln("//@flow").eol();
-        return this;
+        return true;
     }
 
 }

@@ -4,8 +4,6 @@ import org.junit.Test;
 import pl.rtprog.java2flow.js.JsGenerator;
 import pl.rtprog.java2flow.test.UserAPI;
 
-import static org.junit.Assert.*;
-
 public class FetchGeneratorTest {
     @Test
     public void simpleTest() {
@@ -16,9 +14,10 @@ public class FetchGeneratorTest {
         FetchGenerator f=new FetchGenerator(g, types,
                 "appFetch",
                 "import appFetch from './network';",
-                "import * from './types';"
+                "./types"
         );
-        f.export(UserAPI.class);
+        f.register(UserAPI.class);
+        f.exportPathFunction();
         f.exportFunctions();
         System.out.println("Types:");
         System.out.println(types.toString());
