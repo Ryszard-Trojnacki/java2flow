@@ -12,8 +12,6 @@ import java.lang.reflect.Type;
  * @author Ryszard Trojacki
  */
 public interface PathFragment {
-
-
     /**
      * Path item, that is just a const value.
      */
@@ -32,12 +30,19 @@ public interface PathFragment {
         }
     }
 
+    class RootPathFragment extends ConstPathFragment {
+        public RootPathFragment() {
+            super("");
+        }
+    }
+
     class ParamPathFragment extends NamedTypeInfo implements PathFragment {
         public ParamPathFragment(Class<?> clazz, Type type, AnnotatedType annotatedType, Annotation[] annotations, String name) {
             super(clazz, type, annotatedType, annotations, name);
         }
     }
 
+    RootPathFragment ROOT=new RootPathFragment();
 
     static ConstPathFragment of(String value) {
         return new ConstPathFragment(value);
@@ -46,4 +51,6 @@ public interface PathFragment {
     static ParamPathFragment of(Class<?> clazz, Type type, AnnotatedType annotatedType, Annotation[] annotations, String name) {
         return new ParamPathFragment(clazz, type, annotatedType, annotations, name);
     }
+
+
 }

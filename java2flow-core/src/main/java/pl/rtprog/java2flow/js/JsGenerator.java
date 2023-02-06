@@ -95,6 +95,29 @@ public class JsGenerator {
         return this;
     }
 
+    /**
+     * Append string value with quotation marks around it.
+     * @param str string to append to output
+     * @return this generator
+     */
+    public JsGenerator quot(CharSequence str) {
+        if(str==null) {
+            line.append("null");
+            return this;
+        }
+
+        line.append('"');
+        for(int i=0;i<str.length();++i) {
+            char c=str.charAt(i);
+            if(c=='\n') line.append("\\n");
+            else if (c=='\t') line.append("\\t");
+            else if(c=='"') line.append("\\\"");
+            else line.append(c);    // Other escaped values
+        }
+        line.append('"');
+        return this;
+    }
+
     public JsGenerator a(int value) {
         append(String.valueOf(value));
         return this;

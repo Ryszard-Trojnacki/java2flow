@@ -4,9 +4,14 @@ import pl.rtprog.java2flow.structs.JavaTypeInfo;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CompletionStage;
 
@@ -55,6 +60,16 @@ public class RestMethod {
     private final boolean pathVariables;
 
 
+    /**
+     * Private constructor with all values.
+     * @param clazz
+     * @param method
+     * @param type
+     * @param path
+     * @param body
+     * @param result
+     * @param fragments
+     */
     private RestMethod(Class<?> clazz, Method method, String type, String path, JavaTypeInfo body, JavaTypeInfo result, PathFragment[] fragments) {
         this.clazz = clazz;
         this.method = method;
@@ -66,6 +81,9 @@ public class RestMethod {
         this.pathVariables= fragments!=null && Arrays.stream(fragments).anyMatch(f -> f instanceof PathFragment.ParamPathFragment);
     }
 
+    /**
+     * Getter for {@link #clazz}.
+     */
     public Class<?> getClazz() {
         return clazz;
     }
@@ -98,6 +116,31 @@ public class RestMethod {
         return pathVariables;
     }
 
+    private static PathFragment[] computerFragments(Method method, String path) {
+        String[] strFragments = path.split("/");
+        ArrayList<PathFragment> fragments = new ArrayList<>(strFragments.length+1);
+//        if(path.startsWith("/")) fragments.add(PathFragment.ROOT);
+
+        for (int i = 0; i < strFragments.length; ++i) {
+            String str = strFragments[i];
+            String name = RestUtils.isVariable(str);
+            if (name == null) {    // not a variable path fragment
+                fragments.add(PathFragment.of(str));
+                continue;
+            }
+            int pi = RestUtils.findPathParam(method, name);
+            if (pi == -1) throw new IllegalArgumentException("Missing @PathParam for '" + name + "' in method " + method.getName());
+            fragments.add(PathFragment.of(
+                    method.getParameterTypes()[pi],
+                    method.getGenericParameterTypes()[pi],
+                    method.getAnnotatedParameterTypes()[pi],
+                    method.getParameterAnnotations()[pi],
+                    name
+            ));
+        }
+        return fragments.toArray(new PathFragment[0]);
+    }
+
     public static RestMethod of(Method method) throws IllegalArgumentException {
         Class<?> owner=method.getDeclaringClass();
         Path classPath=owner.getAnnotation(Path.class);
@@ -106,25 +149,7 @@ public class RestMethod {
         String type= RestUtils.getMethodType(method);
         if(type==null) throw new IllegalArgumentException("Missing method type (@GET, @POST, @PUT, @HEAD, @DELETE, @OPTION) annotation at method "+method.getName());
         String path=classPath.value()+(methodPath!=null?"/"+methodPath.value():"");
-        String[] strFragments=path.split("/");
-        PathFragment[] fragments=new PathFragment[strFragments.length];
-        for(int i=0;i<strFragments.length;++i) {
-            String str=strFragments[i];
-            String name=RestUtils.isVariable(str);
-            if(name==null) {    // not a variable path fragment
-                fragments[i]= PathFragment.of(str);
-                continue;
-            }
-            int pi=RestUtils.findPathParam(method, name);
-            if(pi==-1) throw new IllegalArgumentException("Missing @PathParam for '"+name+"' in method "+method.getName());
-            fragments[i]= PathFragment.of(
-                    method.getParameterTypes()[pi],
-                    method.getGenericParameterTypes()[pi],
-                    method.getAnnotatedParameterTypes()[pi],
-                    method.getParameterAnnotations()[pi],
-                    name
-            );
-        }
+        PathFragment[] fragments=computerFragments(method,path);
 
         JavaTypeInfo returnType=JavaTypeInfo.returnOf(method);
 
@@ -143,9 +168,25 @@ public class RestMethod {
             }
         }
 
+        JavaTypeInfo body=null;
+
+        for(int i=0;i<method.getParameterCount();++i) {
+            Annotation[] pa=method.getParameterAnnotations()[i];
+            if(RestUtils.find(pa, Context.class)!=null ||
+                    RestUtils.find(pa, QueryParam.class)!=null ||
+                    RestUtils.find(pa, PathParam.class)!=null) continue;
+            body=new JavaTypeInfo(
+                    method.getParameterTypes()[i],
+                    method.getGenericParameterTypes()[i],
+                    method.getAnnotatedParameterTypes()[i],
+                    method.getParameterAnnotations()[i]
+            );
+            break;
+        }
+
         return new RestMethod(
                 owner, method, type, path,
-                null,
+                body,
                 returnType,
                 fragments
         );

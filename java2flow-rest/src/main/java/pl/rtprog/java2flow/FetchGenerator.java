@@ -56,6 +56,46 @@ public class FetchGenerator {
         o.eol();
     }
 
+    private void appendPath(RestMethod m, boolean flowTypes, boolean jsTypes) {
+        if(!m.hasPathVariables()) {
+            o.quot(m.getPath());
+            return;
+        }
+        StringBuilder path=new StringBuilder();
+        boolean pathEmpty=true;
+        boolean first=true;
+        o.a("[ ");
+        for(PathFragment f: m.getFragments()) {
+            if(f instanceof PathFragment.ConstPathFragment) {
+                PathFragment.ConstPathFragment cf=(PathFragment.ConstPathFragment)f;
+                if(pathEmpty) pathEmpty=false;
+                else path.append('/');
+
+                path.append(cf.getValue());
+                continue;
+            }
+            if(first) first=false;
+            else o.a(", ");
+
+            if(!pathEmpty) {
+                o.quot(path);
+                o.a(", ");
+                path.setLength(0);
+                pathEmpty=true;
+            }
+
+            PathFragment.ParamPathFragment pf=(PathFragment.ParamPathFragment)f;
+            if(flowTypes) o.a(ft(types.getJavaScriptType(pf)));
+            else if(jsTypes) o.a(jt(types.getJavaScriptType(pf)));
+            else o.a(pf.getName());
+        }
+        if(!pathEmpty) {
+            if(!first) o.a(", ");
+            o.a('\"').a(path).a('\"');
+        }
+        o.a(" ]");
+    }
+
     public void exportPathFunction() {
         if(methods.isEmpty()) return;
         addHeader();
@@ -73,37 +113,7 @@ public class FetchGenerator {
             for (RestMethod m: methods) {
                 if(first) first=false;
                 else o.ln(" | ");
-
-                if(!m.hasPathVariables()) o.a('\"').a(m.getPath()).a('\"');
-                else {
-                    StringBuilder pathBuf=new StringBuilder();
-                    boolean ff=true;
-                    o.a("[ ");
-
-                    for(PathFragment f: m.getFragments()) {
-                        if(f instanceof PathFragment.ConstPathFragment) {
-                            PathFragment.ConstPathFragment cf=(PathFragment.ConstPathFragment)f;
-                            if(pathBuf.length()>0) pathBuf.append('/');
-                            pathBuf.append(cf.getValue());
-                            continue;
-                        }
-                        if(ff) ff=false;
-                        else o.a(", ");
-
-                        if(pathBuf.length()>0) {
-                            o.a('\"').a(pathBuf).a("\", ");
-                            pathBuf.setLength(0);
-                        }
-
-                        PathFragment.ParamPathFragment pf=(PathFragment.ParamPathFragment)f;
-                        o.a(ft(types.getJavaScriptType(pf)));
-                    }
-                    if(pathBuf.length()>0) {
-                        if(!ff) o.a(", ");
-                        o.a('\"').a(pathBuf).a('\"');
-                    }
-                    o.a(" ]");
-                }
+                appendPath(m, true, false);
             }
             o.ln(";");
             o.leave();
@@ -155,44 +165,19 @@ public class FetchGenerator {
             if(o.isFlow()) o.a(": Promise<").a(ft(types.getJavaScriptType(m.getResult()))).a(">");
             o.ln(" {");
             o.enter().a("return ").a(networkFunc).a("(").eol().enter();
-            if(m.hasPathVariables()) {
-                StringBuilder pathBuf=new StringBuilder();
-                boolean first=true;
+            appendPath(m, false, false);
 
-                o.a("[ ");
-
-                for(PathFragment f: m.getFragments()) {
-                    if(f instanceof PathFragment.ConstPathFragment) {
-                        PathFragment.ConstPathFragment cf=(PathFragment.ConstPathFragment)f;
-                        if(pathBuf.length()>0) pathBuf.append('/');
-                        pathBuf.append(cf.getValue());
-                        continue;
-                    }
-                    if(first) first=false;
-                    else o.a(", ");
-
-                    if(pathBuf.length()>0) {
-                        o.a('\"').a(pathBuf).a("\", ");
-                        pathBuf.setLength(0);
-                    }
-
-                    PathFragment.ParamPathFragment pf=(PathFragment.ParamPathFragment)f;
-                    o.a(pf.getName());
-                }
-                if(pathBuf.length()>0) {
-                    if(!first) o.a(", ");
-                    o.a('\"').a(pathBuf).a('\"');
-                }
-                o.a("]");
-            } else o.a("\"").a(m.getPath()).a("\"");
-
-            o.ln(",").a('\"').a(m.getType()).ln(",");
-
-            o.ln("null,");
+            o.ln(",").a('\"').a(m.getType()).a("\",");
 
             if(m.getBody()!=null) {
-                o.a("body");
-            } else o.a("null");
+                o.eol().a("null,");
+            }
+
+            if(m.getBody()!=null) {
+                o.eol().a("body");
+            } else {
+//                o.a("undefined");
+            }
 
             o.eol().leave().ln(");").leave().ln("}").eol();
         }
