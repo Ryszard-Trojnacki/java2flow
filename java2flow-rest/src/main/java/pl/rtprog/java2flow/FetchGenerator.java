@@ -57,6 +57,7 @@ public class FetchGenerator {
     }
 
     public void exportPathFunction() {
+        if(methods.isEmpty()) return;
         addHeader();
 //        if(o.isJsdoc()) {
 //            o.ln("/**")
@@ -127,7 +128,7 @@ public class FetchGenerator {
                 if(m.getBody()!=null) {
                     o.a(" * @param {").a(jt(types.getJavaScriptType(m.getBody()))).a("} body").eol();
                 }
-                o.a(" * @return {Promise<").a(jt(types.getJavaScriptType(m.getResult()))).a(">}").eol();
+                o.a(" * @return {Promise<").a(m.getResult()==null?"void":jt(types.getJavaScriptType(m.getResult()))).a(">}").eol();
                 o.ln(" */");
             }
             o.a("export function ").a(Java2FlowUtils.uncapitalize(m.getClazz().getSimpleName()))

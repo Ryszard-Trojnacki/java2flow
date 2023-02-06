@@ -5,8 +5,10 @@ import pl.rtprog.java2flow.structs.JavaTypeInfo;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.concurrent.CompletionStage;
 
 /**
  * Class that holds information about REST API call.
@@ -124,10 +126,27 @@ public class RestMethod {
             );
         }
 
+        JavaTypeInfo returnType=JavaTypeInfo.returnOf(method);
+
+        if(CompletionStage.class.isAssignableFrom(method.getReturnType())) {
+            Type rt=method.getGenericReturnType();
+            if(rt instanceof ParameterizedType) {
+                ParameterizedType pt=(ParameterizedType)rt;
+                if(pt.getActualTypeArguments()[0] instanceof Class) {
+                    returnType = new JavaTypeInfo(
+                            (Class<?>) pt.getActualTypeArguments()[0],
+                            pt.getActualTypeArguments()[0],
+                            method.getAnnotatedReturnType(),
+                            method.getAnnotations()
+                    );
+                }
+            }
+        }
+
         return new RestMethod(
                 owner, method, type, path,
                 null,
-                JavaTypeInfo.returnOf(method),
+                returnType,
                 fragments
         );
 
