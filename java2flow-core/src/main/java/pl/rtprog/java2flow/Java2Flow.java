@@ -231,7 +231,7 @@ public class Java2Flow {
 
         out.append("export type ").append(name).append(" =");
         String superClass=null;
-        if(type.getSuperclass()!=Object.class) {
+        if(type.getSuperclass()!=Object.class && type.getSuperclass()!=null) {
             String sup=getType(type.getSuperclass(), type.getGenericSuperclass());
             if(sup!=null) {
                 superClass=sup;

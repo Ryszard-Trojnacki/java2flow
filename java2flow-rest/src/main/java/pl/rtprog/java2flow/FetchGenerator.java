@@ -1,6 +1,7 @@
 package pl.rtprog.java2flow;
 
 import pl.rtprog.java2flow.js.JsGenerator;
+import pl.rtprog.java2flow.structs.NamedTypeInfo;
 
 import javax.ws.rs.Path;
 import java.lang.reflect.Method;
@@ -37,14 +38,24 @@ public class FetchGenerator {
         }
     }
 
-    private String ft(String type) {
+    private String ftSingle(String type) {
         if(typesFile==null || type==null || Java2FlowUtils.isJavaScriptType(type)) return type;
         return "types."+type;
     }
 
-    private String jt(String type) {
+    private String ft(String type) {
+        if(typesFile==null || type==null || Java2FlowUtils.isJavaScriptType(type)) return type;
+        return Java2FlowUtils.processGeneric(type, this::ftSingle);
+    }
+
+    private String jtSingle(String type) {
         if(typesFile==null || type==null || Java2FlowUtils.isJavaScriptType(type)) return type;
         return "import('"+typesFile+"')."+type;
+    }
+
+    private String jt(String type) {
+        if(typesFile==null || type==null || Java2FlowUtils.isJavaScriptType(type)) return type;
+        return Java2FlowUtils.processGeneric(type, this::jtSingle);
     }
 
     public void addHeader() {
@@ -160,7 +171,15 @@ public class FetchGenerator {
                     o.a("body");
                     if (o.isFlow()) o.a(": ").a(ft(types.getJavaScriptType(m.getBody())));
                 }
+                for(NamedTypeInfo q: m.getQuery()) {
+                    if(first) first=false;
+                    else o.a(", ");
+                    o.a(q.getName());
+                    if(o.isFlow()) o.a(": ").a(ft(types.getJavaScriptType(q)));
+                }
+
                 o.a(")");
+
             }
             if(o.isFlow()) o.a(": Promise<").a(ft(types.getJavaScriptType(m.getResult()))).a(">");
             o.ln(" {");
@@ -169,7 +188,18 @@ public class FetchGenerator {
 
             o.ln(",").a('\"').a(m.getType()).a("\",");
 
-            if(m.getBody()!=null) {
+            boolean query=false;
+
+            if(m.getQuery().length>0) {
+                query=true;
+                o.eol().a("{ ");
+                for(NamedTypeInfo q: m.getQuery()) {
+                    o.a(q.getName()).a(", ");
+                }
+                o.a(" },");
+            }
+
+            if(m.getBody()!=null && !query) {
                 o.eol().a("null,");
             }
 

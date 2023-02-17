@@ -1,6 +1,7 @@
 package pl.rtprog.java2flow;
 
 import pl.rtprog.java2flow.structs.JavaTypeInfo;
+import pl.rtprog.java2flow.structs.NamedTypeInfo;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
@@ -59,18 +60,16 @@ public class RestMethod {
 
     private final boolean pathVariables;
 
+    /**
+     * Query parameters
+     */
+    private final NamedTypeInfo[] query;
+
 
     /**
      * Private constructor with all values.
-     * @param clazz
-     * @param method
-     * @param type
-     * @param path
-     * @param body
-     * @param result
-     * @param fragments
      */
-    private RestMethod(Class<?> clazz, Method method, String type, String path, JavaTypeInfo body, JavaTypeInfo result, PathFragment[] fragments) {
+    private RestMethod(Class<?> clazz, Method method, String type, String path, NamedTypeInfo[] query, JavaTypeInfo body, JavaTypeInfo result, PathFragment[] fragments) {
         this.clazz = clazz;
         this.method = method;
         this.type = type;
@@ -78,6 +77,7 @@ public class RestMethod {
         this.body = body;
         this.result = result;
         this.fragments = fragments;
+        this.query=query;
         this.pathVariables= fragments!=null && Arrays.stream(fragments).anyMatch(f -> f instanceof PathFragment.ParamPathFragment);
     }
 
@@ -114,6 +114,10 @@ public class RestMethod {
 
     public boolean hasPathVariables() {
         return pathVariables;
+    }
+
+    public NamedTypeInfo[] getQuery() {
+        return query;
     }
 
     private static PathFragment[] computerFragments(Method method, String path) {
@@ -168,10 +172,18 @@ public class RestMethod {
             }
         }
 
+        ArrayList<NamedTypeInfo> query=new ArrayList<>();
+
         JavaTypeInfo body=null;
 
         for(int i=0;i<method.getParameterCount();++i) {
             Annotation[] pa=method.getParameterAnnotations()[i];
+            QueryParam q=RestUtils.find(pa, QueryParam.class);
+            if(q!=null) {
+                query.add(NamedTypeInfo.forParameter(method, q.value(), i));
+                continue;
+            }
+
             if(RestUtils.find(pa, Context.class)!=null ||
                     RestUtils.find(pa, QueryParam.class)!=null ||
                     RestUtils.find(pa, PathParam.class)!=null) continue;
@@ -186,6 +198,7 @@ public class RestMethod {
 
         return new RestMethod(
                 owner, method, type, path,
+                query.toArray(new NamedTypeInfo[0]),
                 body,
                 returnType,
                 fragments

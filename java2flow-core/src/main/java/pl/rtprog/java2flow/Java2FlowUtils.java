@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.BeanProperty;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.function.Function;
 
 /**
  * Helper functions.
@@ -142,6 +143,29 @@ public class Java2FlowUtils {
         return "string".equals(type) || "number".equals(type) || "Object".equals(type) ||
                 "boolean".equals(type) || "symbol".equals(type) || "object".equals(type) ||
                 "bigint".equals(type) || "BigInt".equals(type) || "Number".equals(type) ||
-                "String".equals(type) || "Date".equals(type) || "Boolean".equals(type);
+                "String".equals(type) || "Date".equals(type) || "Boolean".equals(type) ||
+                "void".equals(type) || "Array".equals(type);
+    }
+
+    /**
+     * Helper function that's process each type in generic type declaration.
+     * @param type type to process
+     * @param processor fragment convert function
+     * @return converted type
+     */
+    public static String processGeneric(String type, Function<String, String> processor) {
+        if(type==null || type.length()==0) return type;
+        int pos=0;
+        StringBuilder sb=new StringBuilder(type.length());
+        for(int i=0;i<type.length();++i) {
+            char c=type.charAt(i);
+            if(c==',' || c=='<' || c=='>' || c==' ') {
+                if(pos<i) sb.append(processor.apply(type.substring(pos, i)));
+                sb.append(c);
+                pos=i+1;
+            }
+        }
+        if(pos<type.length()) sb.append(processor.apply(type.substring(pos)));
+        return sb.toString();
     }
 }
