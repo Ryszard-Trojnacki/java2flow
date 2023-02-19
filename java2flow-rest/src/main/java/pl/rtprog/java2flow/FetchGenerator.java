@@ -6,6 +6,8 @@ import pl.rtprog.java2flow.structs.NamedTypeInfo;
 import javax.ws.rs.Path;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Generic (single) method generator with types.
@@ -18,6 +20,7 @@ public class FetchGenerator {
     private final String networkFunc;
     private final String networkImport;
     private final String typesFile;
+    private final Set<String> usedTypes;
 
     public FetchGenerator(JsGenerator o, Java2Flow types, String networkFunc, String networkImport, String typesFile) {
         this.o=o;
@@ -25,6 +28,7 @@ public class FetchGenerator {
         this.networkFunc=networkFunc;
         this.networkImport=networkImport;
         this.typesFile=typesFile;
+        this.usedTypes=new HashSet<>();
     }
 
     private final ArrayList<RestMethod> methods=new ArrayList<>();
@@ -38,33 +42,44 @@ public class FetchGenerator {
         }
     }
 
-    private String ftSingle(String type) {
-        if(typesFile==null || type==null || Java2FlowUtils.isJavaScriptType(type)) return type;
-        return "types."+type;
-    }
-
-    private String ft(String type) {
-        if(typesFile==null || type==null || Java2FlowUtils.isJavaScriptType(type)) return type;
-        return Java2FlowUtils.processGeneric(type, this::ftSingle);
-    }
-
-    private String jtSingle(String type) {
-        if(typesFile==null || type==null || Java2FlowUtils.isJavaScriptType(type)) return type;
-        return "import('"+typesFile+"')."+type;
-    }
-
-    private String jt(String type) {
-        if(typesFile==null || type==null || Java2FlowUtils.isJavaScriptType(type)) return type;
-        return Java2FlowUtils.processGeneric(type, this::jtSingle);
-    }
-
     public void addHeader() {
         if(!o.addHeader()) return;
+        calcImports();
         o.ln(networkImport);
-        if(typesFile!=null && o.isFlow()) {
-            o.a("import * as types from '").a(typesFile).ln("';");
+        if(typesFile!=null && o.isFlow() && !usedTypes.isEmpty()) {
+            o.a("import {");
+            boolean f=true;
+            for(String type: usedTypes) {
+                if(f) f=false;
+                else o.a(", ");
+                o.a(type);
+            }
+            o.a("} from '").a(typesFile).ln("';");
         }
         o.eol();
+    }
+
+    private void addType(String type) {
+        if(Java2FlowUtils.isJavaScriptType(type)) return;
+        Java2FlowUtils.processGeneric(type, t -> {
+            if(!Java2FlowUtils.isJavaScriptType(t)) usedTypes.add(t);
+            return t;
+        });
+    }
+
+    private void calcImports() {
+        for(RestMethod m: methods) {
+            for(PathFragment f: m.getFragments()) {
+                if(f instanceof PathFragment.ParamPathFragment) {
+                    addType(types.getJavaScriptType((PathFragment.ParamPathFragment)f));
+                }
+            }
+            if(m.getBody()!=null) addType(types.getJavaScriptType(m.getBody()));
+            for(NamedTypeInfo q: m.getQuery()) {
+                addType(types.getJavaScriptType(q));
+            }
+            addType(types.getJavaScriptType(m.getResult()));
+        }
     }
 
     private void appendPath(RestMethod m, boolean flowTypes, boolean jsTypes) {
@@ -96,8 +111,8 @@ public class FetchGenerator {
             }
 
             PathFragment.ParamPathFragment pf=(PathFragment.ParamPathFragment)f;
-            if(flowTypes) o.a(ft(types.getJavaScriptType(pf)));
-            else if(jsTypes) o.a(jt(types.getJavaScriptType(pf)));
+            if(flowTypes) o.a(types.getJavaScriptType(pf));
+            else if(jsTypes) o.a(types.getJavaScriptType(pf));
             else o.a(pf.getName());
         }
         if(!pathEmpty) {
@@ -144,12 +159,12 @@ public class FetchGenerator {
                 for(PathFragment f: m.getFragments()) {
                     if(!(f instanceof PathFragment.ParamPathFragment)) continue;
                     PathFragment.ParamPathFragment pf=(PathFragment.ParamPathFragment)f;
-                    o.a(" * @param {").a(jt(types.getJavaScriptType(pf))).a("} ").a(pf.getName()).eol();
+                    o.a(" * @param {").a(types.getJavaScriptType(pf)).a("} ").a(pf.getName()).eol();
                 }
                 if(m.getBody()!=null) {
-                    o.a(" * @param {").a(jt(types.getJavaScriptType(m.getBody()))).a("} body").eol();
+                    o.a(" * @param {").a(types.getJavaScriptType(m.getBody())).a("} body").eol();
                 }
-                o.a(" * @return {Promise<").a(m.getResult()==null?"void":jt(types.getJavaScriptType(m.getResult()))).a(">}").eol();
+                o.a(" * @return {Promise<").a(m.getResult()==null?"void":types.getJavaScriptType(m.getResult())).a(">}").eol();
                 o.ln(" */");
             }
             o.a("export function ").a(Java2FlowUtils.uncapitalize(m.getClazz().getSimpleName()))
@@ -163,25 +178,25 @@ public class FetchGenerator {
                     else o.a(", ");
                     PathFragment.ParamPathFragment pf = (PathFragment.ParamPathFragment) f;
                     o.a(pf.getName());
-                    if (o.isFlow()) o.a(": ").a(ft(types.getJavaScriptType(pf)));
+                    if (o.isFlow()) o.a(": ").a(types.getJavaScriptType(pf));
                 }
                 if (m.getBody() != null) {
                     if (first) first = false;
                     else o.a(", ");
                     o.a("body");
-                    if (o.isFlow()) o.a(": ").a(ft(types.getJavaScriptType(m.getBody())));
+                    if (o.isFlow()) o.a(": ").a(types.getJavaScriptType(m.getBody()));
                 }
                 for(NamedTypeInfo q: m.getQuery()) {
                     if(first) first=false;
                     else o.a(", ");
                     o.a(q.getName());
-                    if(o.isFlow()) o.a(": ").a(ft(types.getJavaScriptType(q)));
+                    if(o.isFlow()) o.a(": ").a(types.getJavaScriptType(q));
                 }
 
                 o.a(")");
 
             }
-            if(o.isFlow()) o.a(": Promise<").a(ft(types.getJavaScriptType(m.getResult()))).a(">");
+            if(o.isFlow()) o.a(": Promise<").a(types.getJavaScriptType(m.getResult())).a(">");
             o.ln(" {");
             o.enter().a("return ").a(networkFunc).a("(").eol().enter();
             appendPath(m, false, false);

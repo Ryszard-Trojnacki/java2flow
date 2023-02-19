@@ -18,10 +18,7 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -177,7 +174,8 @@ public class Java2Flow {
                 return "Array<"+getType(comp, comp)+">";
             } else return "Array<any>";
         }
-        if(Map.class.isAssignableFrom(type)) {
+        boolean enumMap=EnumMap.class==type.getSuperclass();
+        if(!enumMap && Map.class.isAssignableFrom(type)) {
             if((typeInfo instanceof JavaType) && ((JavaType)typeInfo).isMapLikeType()) {
                 JavaType mt=(JavaType)typeInfo;
                 return "{ ["+getType(mt.getKeyType().getRawClass(), mt.getKeyType())
@@ -231,7 +229,7 @@ public class Java2Flow {
 
         out.append("export type ").append(name).append(" =");
         String superClass=null;
-        if(type.getSuperclass()!=Object.class && type.getSuperclass()!=null) {
+        if(type.getSuperclass()!=Object.class && type.getSuperclass()!=null && !enumMap) {
             String sup=getType(type.getSuperclass(), type.getGenericSuperclass());
             if(sup!=null) {
                 superClass=sup;
@@ -253,83 +251,98 @@ public class Java2Flow {
             }
         } else if(hasDoc) doc.append(comment);
 
-        JsonFormatVisitorWrapper.Base visitor=new JsonFormatVisitorWrapper.Base() {
-            @Override
-            public JsonObjectFormatVisitor expectObjectFormat(JavaType type) {
-                return new JsonObjectFormatVisitor.Base() {
-                    private void process(BeanProperty prop) {
-                        // Skip parent types members if parent type generated
-                        if(hasParentClass && prop.getMember().getDeclaringClass()!=type.getRawClass()) return;
+        if(enumMap) {
+            Type ti=typeInfo;
+            if(!(ti instanceof ParameterizedType)) ti=type.getGenericSuperclass();
+            if(ti instanceof ParameterizedType) {
+                Class<?> key=(Class<?>)((ParameterizedType)ti).getActualTypeArguments()[0];
+                Class<?> value=(Class<?>)((ParameterizedType)ti).getActualTypeArguments()[1];
+                String valueType=getType(value, value);
+                for(Enum<?> v: (Enum<?>[])key.getEnumConstants()) {
+                    out.append('\t').append(v.name()).append(":? ").append(valueType).append(";\n");
+                    doc.append(" * @property {").append(valueType).append("} [").append(v.name()).append(']').append('\n');
+                }
+            }
+        } else {
+            JsonFormatVisitorWrapper.Base visitor = new JsonFormatVisitorWrapper.Base() {
+                @Override
+                public JsonObjectFormatVisitor expectObjectFormat(JavaType type) {
+                    return new JsonObjectFormatVisitor.Base() {
+                        private void process(BeanProperty prop) {
+                            // Skip parent types members if parent type generated
+                            if (hasParentClass && prop.getMember().getDeclaringClass() != type.getRawClass()) return;
 
-                        String name=prop.getName();
-                        FlowProperty fp=prop.getAnnotation(FlowProperty.class);
-                        if(fp!=null && fp.value().length()>0) name=fp.value();
+                            String name = prop.getName();
+                            FlowProperty fp = prop.getAnnotation(FlowProperty.class);
+                            if (fp != null && fp.value().length() > 0) name = fp.value();
 
-                        String comment=null;
-                        if(fp!=null && fp.description().length()>0) {
-                            comment=fp.description();
-                        } else if(javaDoc!=null) {
-                            FieldJavaDoc doc=javaDoc.get(prop.getName());
-                            if(doc!=null && !Java2FlowUtils.isBlank(doc.getComment())) {
-                                comment=doc.getComment();
-                            }
-                        }
-                        if(comment!=null) {
-                            out.append("\t/**\n");
-                            Java2FlowUtils.formatOutput(out, "\t * ", comment);
-                            out.append("\t */\n");
-                        }
-
-                        JsonInclude ji=prop.getAnnotation(JsonInclude.class);
-                        final boolean optional=ji!=null && ji.value()!= JsonInclude.Include.ALWAYS;
-
-                        out.append("\t").append(name);
-                        if(optional) out.append('?');
-                        out.append(": ");
-
-                        String type;
-
-                        if(fp!=null && fp.custom().length()>0) {
-                            type=fp.custom();
-                        } else {
-                            type=getType(prop.getType().getRawClass(), prop.getType());
-                            if (!prop.getType().isPrimitive()) {
-                                if (!Java2FlowUtils.isNotNull(prop) && (ca == null || !ca.isNotNull(prop.getName()))) {
-                                    type+="|null";
+                            String comment = null;
+                            if (fp != null && fp.description().length() > 0) {
+                                comment = fp.description();
+                            } else if (javaDoc != null) {
+                                FieldJavaDoc doc = javaDoc.get(prop.getName());
+                                if (doc != null && !Java2FlowUtils.isBlank(doc.getComment())) {
+                                    comment = doc.getComment();
                                 }
                             }
+                            if (comment != null) {
+                                out.append("\t/**\n");
+                                Java2FlowUtils.formatOutput(out, "\t * ", comment);
+                                out.append("\t */\n");
+                            }
+
+                            JsonInclude ji = prop.getAnnotation(JsonInclude.class);
+                            final boolean optional = ji != null && ji.value() != JsonInclude.Include.ALWAYS;
+
+                            out.append("\t").append(name);
+                            if (optional) out.append('?');
+                            out.append(": ");
+
+                            String type;
+
+                            if (fp != null && fp.custom().length() > 0) {
+                                type = fp.custom();
+                            } else {
+                                type = getType(prop.getType().getRawClass(), prop.getType());
+                                if (!prop.getType().isPrimitive()) {
+                                    if (!Java2FlowUtils.isNotNull(prop) && (ca == null || !ca.isNotNull(prop.getName()))) {
+                                        type += "|null";
+                                    }
+                                }
+                            }
+
+                            out.append(type).append(";\n");
+                            if (jsdoc) {
+                                doc.append(" * @property {").append(type).append("} ");
+                                if (optional) doc.append('[');
+                                doc.append(name);
+                                if (optional) doc.append(']');
+                                if (comment != null) {
+                                    doc.append(' ');
+                                    Java2FlowUtils.formatOutput(doc, " * ", comment, false);
+                                } else doc.append('\n');
+                            }
                         }
 
-                        out.append(type).append(";\n");
-                        if(jsdoc) {
-                            doc.append(" * @property {").append(type).append("} ");
-                            if(optional) doc.append('[');
-                            doc.append(name);
-                            if(optional) doc.append(']');
-                            if(comment!=null) {
-                                doc.append(' ');
-                                Java2FlowUtils.formatOutput(doc, " * ", comment, false);
-                            } else doc.append('\n');
+                        @Override
+                        public void optionalProperty(BeanProperty prop) {
+                            process(prop);
                         }
-                    }
 
-                    @Override
-                    public void optionalProperty(BeanProperty prop) {
-                        process(prop);
-                    }
-
-                    @Override
-                    public void property(BeanProperty prop) {
-                        process(prop);
-                    }
-                };
+                        @Override
+                        public void property(BeanProperty prop) {
+                            process(prop);
+                        }
+                    };
+                }
+            };
+            try {
+                mapper.acceptJsonFormatVisitor(type, visitor);
+            } catch (JsonMappingException e) {
+                throw new RuntimeException(e);
             }
-        };
-        try {
-            mapper.acceptJsonFormatVisitor(type, visitor);
-        } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
         }
+
         out.append("};\n");
 
         if(jsdoc && hasParentClass) {
