@@ -135,8 +135,11 @@ public class FetchGenerator {
 //        }
         if(o.isFlow()) {
             o.ln("export type NetworkPathType = ").enter();
+            Set<String> paths=new HashSet<>();
             boolean first=true;
             for (RestMethod m: methods) {
+                if(!paths.add(m.getPath())) continue;
+
                 if(first) first=false;
                 else o.ln(" | ");
                 appendPath(m, true, false);

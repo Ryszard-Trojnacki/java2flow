@@ -120,6 +120,17 @@ public class RestMethod {
         return query;
     }
 
+    /**
+     * Checks if other method has the same path.
+     * @param other other method to check
+     * @return true if other method has the same path
+     */
+    public boolean pathEquals(RestMethod other) {
+        if(other==null) return false;
+        return path.equals(other.path);
+
+    }
+
     private static PathFragment[] computerFragments(Method method, String path) {
         String[] strFragments = path.split("/");
         ArrayList<PathFragment> fragments = new ArrayList<>(strFragments.length+1);

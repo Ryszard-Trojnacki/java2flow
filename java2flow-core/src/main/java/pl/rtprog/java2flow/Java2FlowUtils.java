@@ -159,7 +159,7 @@ public class Java2FlowUtils {
         StringBuilder sb=new StringBuilder(type.length());
         for(int i=0;i<type.length();++i) {
             char c=type.charAt(i);
-            if(c==',' || c=='<' || c=='>' || c==' ' || c=='[' || c==']' || c==':') {
+            if(c==',' || c=='<' || c=='>' || c==' ' || c=='[' || c==']' || c==':' || c=='{' || c=='}') {
                 if(pos<i) sb.append(processor.apply(type.substring(pos, i)));
                 sb.append(c);
                 pos=i+1;
