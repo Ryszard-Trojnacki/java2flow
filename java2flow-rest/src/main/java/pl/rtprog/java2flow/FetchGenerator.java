@@ -4,6 +4,7 @@ import pl.rtprog.java2flow.js.JsGenerator;
 import pl.rtprog.java2flow.structs.NamedTypeInfo;
 
 import javax.ws.rs.Path;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,6 +16,12 @@ import java.util.Set;
  * @author Ryszard Trojnacki
  */
 public class FetchGenerator {
+    private final static Class<? extends Annotation> FLOW_IGNORE;
+
+    static {
+        FLOW_IGNORE=Java2FlowUtils.getIfExits("pl.rtprog.java2flow.FlowIgnore");
+    }
+
     private final JsGenerator o;
     private final Java2Flow types;
     private final String networkFunc;
@@ -36,6 +43,7 @@ public class FetchGenerator {
     public void register(Class<?> clazz) {
         if(!clazz.isAnnotationPresent(Path.class)) return;
         for(Method m: clazz.getMethods()) {
+            if(FLOW_IGNORE!=null && m.isAnnotationPresent(FLOW_IGNORE)) continue;
             try {
                 methods.add(RestMethod.of(m));
             }catch (IllegalArgumentException e) {}

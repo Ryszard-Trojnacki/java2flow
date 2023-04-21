@@ -17,6 +17,20 @@ public class Java2FlowUtils {
      */
     private final static Class<? extends Annotation>[] notNulls;
 
+    /**
+     * Wrapper for {@link Class#forName(String)} that returns null
+     * if {@link ClassNotFoundException} exception is thrown.
+     * @param name name of class to return
+     * @return Class or null
+     */
+    public static <T extends Class<?>> T getIfExits(String name) {
+        try {
+            return (T)Class.forName(name);
+        } catch (ClassNotFoundException|ClassCastException e) {
+            return null;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private static void addIfExists(ArrayList<Class<? extends Annotation>> list, String className) {
         try {

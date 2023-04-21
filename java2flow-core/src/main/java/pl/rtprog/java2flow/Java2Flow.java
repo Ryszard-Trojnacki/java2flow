@@ -133,13 +133,34 @@ public class Java2Flow {
     }
 
     /**
-     * Method for registering custom Flow code for given Java class.
+     * Metod for registering custom Flow code for given Java class.
+     * @param type java type
+     * @param name name of this type in JavaScript/Flow
+     * @param flowCode flow code to use for this type
+     */
+    public void registerCustomType(Class<?> type, String name, String flowCode) {
+        if(name==null) name=getTypename(type);
+        types.put(type, name);
+        if(jsdoc) {
+            out.append("/**\n")
+                .append(" * @typedef {").append(flowCode).append("} ").append(name).append("\n")
+                .append(" */\n");
+        }
+        if(flow) {
+            out.append("export type ").append(name).append(" = ").append(flowCode).append("\n");
+        }
+        out.append('\n');
+    }
+
+    /**
+     * Method for registering inline custom Flow code for given Java class.
      * @param type java type
      * @param flowCode flow code to use for this type
      */
     public void registerCustomType(Class<?> type, String flowCode) {
         types.put(type, flowCode);
     }
+
 
     private String getType(Class<?> type, final Type typeInfo) {
         String t=types.get(type);
