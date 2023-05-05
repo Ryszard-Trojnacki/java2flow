@@ -18,11 +18,11 @@ dependencies {
     implementation project(":java2flow-javadoc-reader")
     implementation project(":java2flow-class-annotation")
 
-    implementation group: 'org.jetbrains', name: 'annotations', version: '23.0.0'
+    implementation group: 'org.jetbrains', name: 'annotations', version: '24.0.1'
     implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
 }
 
 gradlePlugin {
