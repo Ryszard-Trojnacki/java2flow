@@ -17,8 +17,7 @@ java {
 dependencies {
     api project(":java2flow-core")
     implementation group: 'org.jboss.resteasy', name: 'jaxrs-api', version: '3.0.12.Final'
-    implementation group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.1.0'
-    implementation group: 'jakarta.ws.rs', name: 'jakarta.ws.rs-api', version: '4.0.0'
+    implementation group: 'jakarta.ws.rs', name: 'jakarta.ws.rs-api', version: '3.1.0'
 
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
