@@ -50,15 +50,14 @@ public class RestUtils {
      */
     public static String getMethodType(Method method) {
         if(method==null) return null;
-        if(method.isAnnotationPresent(GET.class)) return HttpMethod.GET;
-        if(method.isAnnotationPresent(POST.class)) return HttpMethod.POST;
-        if(method.isAnnotationPresent(HEAD.class)) return HttpMethod.HEAD;
-        if(method.isAnnotationPresent(DELETE.class)) return HttpMethod.DELETE;
-        if(method.isAnnotationPresent(PUT.class)) return HttpMethod.PUT;
-        if(method.isAnnotationPresent(OPTIONS.class)) return HttpMethod.OPTIONS;
+        if(method.isAnnotationPresent(GET.class) || method.isAnnotationPresent(jakarta.ws.rs.GET.class)) return HttpMethod.GET;
+        if(method.isAnnotationPresent(POST.class) || method.isAnnotationPresent(jakarta.ws.rs.POST.class)) return HttpMethod.POST;
+        if(method.isAnnotationPresent(HEAD.class) || method.isAnnotationPresent(jakarta.ws.rs.HEAD.class)) return HttpMethod.HEAD;
+        if(method.isAnnotationPresent(DELETE.class) || method.isAnnotationPresent(jakarta.ws.rs.DELETE.class)) return HttpMethod.DELETE;
+        if(method.isAnnotationPresent(PUT.class) || method.isAnnotationPresent(jakarta.ws.rs.PUT.class)) return HttpMethod.PUT;
+        if(method.isAnnotationPresent(OPTIONS.class) || method.isAnnotationPresent(jakarta.ws.rs.OPTIONS.class)) return HttpMethod.OPTIONS;
         return null;
     }
-
 
     /**
      * Functions that tries to find path parameter type for given name
@@ -69,8 +68,15 @@ public class RestUtils {
     public static int findPathParam(Method method, String name) {
         for(int i=0;i<method.getParameterCount();++i) {
             PathParam pp=find(method.getParameterAnnotations()[i], PathParam.class);
-            if(pp==null) continue;
-            if(name.equals(pp.value())) return i;
+            if(pp!=null) {
+                if (name.equals(pp.value())) return i;
+            } else {
+                jakarta.ws.rs.PathParam jpp=find(method.getParameterAnnotations()[i], jakarta.ws.rs.PathParam.class);
+                if(jpp!=null) {
+                    if (name.equals(jpp.value())) return i;
+                }
+            }
+
         }
         return -1;
     }
@@ -101,8 +107,15 @@ public class RestUtils {
         ArrayList<NamedTypeInfo> res=new ArrayList<>();
         for(int i=0;i<method.getParameterCount();++i) {
             FormParam p=RestUtils.find(method.getParameterAnnotations()[i], FormParam.class);
-            if(p==null) continue;   // not a FormParam
-            res.add(NamedTypeInfo.forParameter(method, p.value(), i));
+            if(p!=null) {
+                res.add(NamedTypeInfo.forParameter(method, p.value(), i));
+            } else {
+                jakarta.ws.rs.FormParam jp=RestUtils.find(method.getParameterAnnotations()[i], jakarta.ws.rs.FormParam.class);
+                if(jp!=null) {
+                    res.add(NamedTypeInfo.forParameter(method, jp.value(), i));
+                }
+
+            }
         }
         return res;
     }
@@ -111,8 +124,14 @@ public class RestUtils {
         ArrayList<NamedTypeInfo> res=new ArrayList<>();
         for(int i=0;i<method.getParameterCount();++i) {
             QueryParam p=RestUtils.find(method.getParameterAnnotations()[i], QueryParam.class);
-            if(p==null) continue;   // not a FormParam
-            res.add(NamedTypeInfo.forParameter(method, p.value(), i));
+            if(p!=null) {
+                res.add(NamedTypeInfo.forParameter(method, p.value(), i));
+            } else {
+                jakarta.ws.rs.QueryParam jp=RestUtils.find(method.getParameterAnnotations()[i], jakarta.ws.rs.QueryParam.class);
+                if(jp!=null) {
+                    res.add(NamedTypeInfo.forParameter(method, jp.value(), i));
+                }
+            }
         }
         return res;
     }

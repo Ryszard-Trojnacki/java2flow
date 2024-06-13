@@ -158,12 +158,25 @@ public class RestMethod {
 
     public static RestMethod of(Method method) throws IllegalArgumentException {
         Class<?> owner=method.getDeclaringClass();
-        Path classPath=owner.getAnnotation(Path.class);
-        if(classPath==null) throw new IllegalArgumentException("Missing @Path annotation at class "+owner.getName());
-        Path methodPath=method.getAnnotation(Path.class);
-        String type= RestUtils.getMethodType(method);
-        if(type==null) throw new IllegalArgumentException("Missing method type (@GET, @POST, @PUT, @HEAD, @DELETE, @OPTION) annotation at method "+method.getName());
-        String path=classPath.value()+(methodPath!=null?"/"+methodPath.value():"");
+        String path;
+        {
+            Path classPath = owner.getAnnotation(Path.class);
+            if (classPath != null) {
+                Path methodPath = method.getAnnotation(Path.class);
+                path = classPath.value() + (methodPath != null ? "/" + methodPath.value() : "");
+            } else  {
+                jakarta.ws.rs.Path jClassPath=owner.getAnnotation(jakarta.ws.rs.Path.class);
+                if(jClassPath!=null) {
+                    jakarta.ws.rs.Path jMethodPath=method.getAnnotation(jakarta.ws.rs.Path.class);
+                    path=jClassPath.value()+(jMethodPath!=null ? "/"+jMethodPath.value() : "");
+                } else {
+                    throw new IllegalArgumentException("Missing @Path annotation at class " + owner.getName());
+                }
+            }
+        }
+        String type = RestUtils.getMethodType(method);
+        if (type == null)
+            throw new IllegalArgumentException("Missing method type (@GET, @POST, @PUT, @HEAD, @DELETE, @OPTION) annotation at method " + method.getName());
         PathFragment[] fragments=computerFragments(method,path);
 
         JavaTypeInfo returnType=JavaTypeInfo.returnOf(method);
@@ -194,10 +207,19 @@ public class RestMethod {
                 query.add(NamedTypeInfo.forParameter(method, q.value(), i));
                 continue;
             }
+            jakarta.ws.rs.QueryParam jq=RestUtils.find(pa, jakarta.ws.rs.QueryParam.class);
+            if(jq!=null) {
+                query.add(NamedTypeInfo.forParameter(method, jq.value(), i));
+                continue;
+            }
 
             if(RestUtils.find(pa, Context.class)!=null ||
                     RestUtils.find(pa, QueryParam.class)!=null ||
                     RestUtils.find(pa, PathParam.class)!=null) continue;
+            if(RestUtils.find(pa, jakarta.ws.rs.core.Context.class)!=null ||
+                    RestUtils.find(pa, jakarta.ws.rs.QueryParam.class)!=null ||
+                    RestUtils.find(pa, jakarta.ws.rs.PathParam.class)!=null) continue;
+
             body=new JavaTypeInfo(
                     method.getParameterTypes()[i],
                     method.getGenericParameterTypes()[i],

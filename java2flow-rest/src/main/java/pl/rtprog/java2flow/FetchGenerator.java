@@ -41,7 +41,7 @@ public class FetchGenerator {
     private final ArrayList<RestMethod> methods=new ArrayList<>();
 
     public void register(Class<?> clazz) {
-        if(!clazz.isAnnotationPresent(Path.class)) return;
+        if(!clazz.isAnnotationPresent(Path.class) && !clazz.isAnnotationPresent(jakarta.ws.rs.Path.class)) return;
         for(Method m: clazz.getMethods()) {
             if(FLOW_IGNORE!=null && m.isAnnotationPresent(FLOW_IGNORE)) continue;
             try {

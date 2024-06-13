@@ -1,7 +1,7 @@
 subprojects {
     group = 'pl.rtprog'
     description="Java classes to JavaScript Flow types converter/generator"
-    version="0.0.3"
+    version="0.0.4-SNAPSHOT"
 
     plugins.withType(JavaPlugin) {
         task javadocJar(type: Jar) {
