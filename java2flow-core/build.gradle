@@ -2,7 +2,6 @@ plugins {
     id 'java-library'
     id 'idea'
     id 'maven-publish'
-    id 'signing'
 }
 
 repositories {
@@ -10,8 +9,8 @@ repositories {
 }
 
 java {
-    sourceCompatibility = 8
-    targetCompatibility = 8
+    sourceCompatibility = 11
+    targetCompatibility = 11
 }
 
 dependencies {

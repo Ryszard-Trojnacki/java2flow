@@ -1,2 +1,3 @@
-include ":java2flow-annotations", ":java2flow-core", ":java2flow-gradle-plugin",
+include ":java2flow-annotations", ":java2flow-core",
         ":java2flow-javadoc-reader", ":java2flow-class-annotation", ":java2flow-rest"
+//        ":java2flow-gradle-plugin"

@@ -16,17 +16,20 @@ public @interface FlowType {
     /**
      * Name of this type in Flow code.
      * When empty then it is Java class name ({@link Class#getSimpleName()}).
+     * @return name of this type in Flow code.
      */
     String value() default "";
 
     /**
      * Custom Flow code to use for this type.
      * If empty then it will be generated.
+     * @return custom Flow code to use for this type.
      */
     String custom() default "";
 
     /**
      * Extra/optional description. If provided then it will be added in JsDoc.
+     * @return extra/optional description.
      */
     String description() default "";
 }

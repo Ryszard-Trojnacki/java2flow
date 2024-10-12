@@ -15,16 +15,19 @@ import java.lang.annotation.Target;
 public @interface FlowProperty {
     /**
      * Name of the field in Flow type.
+     * @return name of the field in Flow type.
      */
     String value() default "";
 
     /**
      * Description to add to JsDoc.
+     * @return description to add to JsDoc.
      */
     String description() default "";
 
     /**
      * Custom Flow type code.
+     * @return custom Flow type code.
      */
     String custom() default "";
 }
