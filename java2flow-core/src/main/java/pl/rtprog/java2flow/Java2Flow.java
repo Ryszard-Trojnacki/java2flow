@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrappe
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import pl.rtprog.java2flow.interfaces.*;
+import pl.rtprog.java2flow.structs.Import;
 import pl.rtprog.java2flow.structs.JavaTypeInfo;
 
 import java.lang.reflect.ParameterizedType;
@@ -36,6 +37,15 @@ public class Java2Flow {
     /** Already known types */
     protected final HashMap<Class<?>, String> types=new HashMap<>();
 
+    /**
+     * Imports for types. Map for file name to list of imported types from it.
+     */
+    protected final HashMap<String, List<Import>> imports=new HashMap<>();
+
+    /** Header buffer */
+    protected final StringBuilder header=new StringBuilder(128);
+
+    /** Main code buffer */
     protected final StringBuilder out=new StringBuilder(1024);
 
     /**
@@ -139,7 +149,7 @@ public class Java2Flow {
      * Override if You want to add something at beaning of the file.
      */
     public void addHeader() {
-        if(flow) out.append("//@flow\n\n");
+        if(flow) header.append("//@flow\n");
     }
 
     private static String getTypename(Class<?> clazz) {
@@ -175,6 +185,70 @@ public class Java2Flow {
      */
     public void registerCustomType(Class<?> type, String flowCode) {
         types.put(type, flowCode);
+    }
+
+    /**
+     * Method for registering external (imported) type for given Java class.
+     * @param type java type
+     * @param name name of this type in JavaScript/Flow
+     * @param importFile file to import this type from
+     * @param importName name of this type in import file;
+     *                   <code>null</code> for default export;
+     *                   <code>""</code> (empty string) for named export same as <code>name</code>
+     */
+    public void registerExternalType(Class<?> type, String name, String importFile, String importName) {
+        types.put(type, name);
+        imports.computeIfAbsent(importFile, (i) -> new ArrayList<>()).add(new Import(name, importName));
+    }
+
+    /**
+     * Method for registering external (imported) type for given Java class.
+     * @param type java type
+     * @param name name of this type in JavaScript/Flow
+     * @param importFile file to import this type from
+     * @param defaultExport <code>true</code> for default export, <code>false</code> for named export
+     */
+    public void registerExternalType(Class<?> type, String name, String importFile, boolean defaultExport) {
+        registerExternalType(type, name, importFile, defaultExport?null:"");
+    }
+
+    /**
+     * Method for registering external (imported) type for given Java class.
+     * @param type java type
+     * @param name name of this type in JavaScript/Flow
+     * @param importFile file to import this type from
+     */
+    public void registerExternalType(Class<?> type, String name, String importFile) {
+        registerExternalType(type, name, importFile, false);
+    }
+
+    protected void flushImports() {
+        for(var e: imports.entrySet()) {
+            if(flow) {
+                header.append("import type ");
+                var def=e.getValue().stream()
+                        .filter(Import::isDefault)
+                        .findFirst().orElse(null);
+
+                if(def!=null) {
+                    header.append(def.getName());
+                }
+
+                boolean first=true;
+                for(var i: e.getValue()) {
+                    if(i==def) continue;
+                    if(first) {
+                        if(def!=null) header.append(", ");
+                        header.append("{ ");
+                        first=false;
+                    } else header.append(", ");
+                    if(i.isSameName()) header.append(i.getName());
+                    else header.append(i.getImportName()).append(" as ").append(i.getName());
+                }
+                if(!first) header.append(" }");
+                header.append(" from '").append(e.getKey()).append("';\n");
+            }
+        }
     }
 
 
@@ -419,6 +493,12 @@ public class Java2Flow {
     }
 
     public String toString() {
-        return out.toString();
+        flushImports();
+        var res=new StringBuilder(header.length()+out.length()+5);
+        res.append(header);
+        if(header.length()>2 && (header.charAt(header.length()-1)!='\n' || header.charAt(header.length()-2)!='\n')) res.append('\n');
+
+        res.append(out);
+        return res.toString();
     }
 }

@@ -148,4 +148,17 @@ public class Java2FlowTest {
 
     }
 
+    @Test
+    public void registerExternalTypeTest() {
+        Java2Flow c=new Java2Flow(null, null, true, true);
+        c.addHeader();
+        c.registerExternalType(Map.class, "Map", "./core.js");
+
+        assertEquals(
+                "//@flow\n" +
+                        "import type { Map } from './core.js';\n" +
+                        "\n"
+                , c.toString());;
+    }
+
 }
