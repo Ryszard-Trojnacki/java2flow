@@ -65,6 +65,22 @@ public class Java2Flow {
     }
 
     /**
+     * Is Flow types generation enabled
+     * @return true if Flow types are generated
+     */
+    public boolean isFlow() {
+        return flow;
+    }
+
+    /**
+     * Is JSDoc types generation enabled
+     * @return true if JSDoc types are generated
+     */
+    public boolean isJsdoc() {
+        return jsdoc;
+    }
+
+    /**
      * Default constructor without any additional providers.
      */
     public Java2Flow() {
