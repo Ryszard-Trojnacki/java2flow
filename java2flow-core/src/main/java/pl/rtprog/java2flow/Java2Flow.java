@@ -161,6 +161,15 @@ public class Java2Flow {
         out.append(code);
     }
 
+    /**
+     * Add custom Flow code to header.<br>
+     * This method does not add any new lines characters.
+     * @param header code to add
+     */
+    public void addCustomHeader(String header) {
+        this.header.append(header);
+    }
+
     private static String getTypename(Class<?> clazz) {
         FlowType ft=clazz.getAnnotation(FlowType.class);
         if(ft!=null && ft.value().length()>0) return ft.value();
