@@ -153,7 +153,7 @@ public class Java2Flow {
     }
 
     /**
-     * Add custom Flow code to output.<br/>
+     * Add custom Flow code to output.<br>
      * This method does not add any new lines characters.
      * @param code code to add
      */
