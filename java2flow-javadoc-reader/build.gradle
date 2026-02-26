@@ -9,13 +9,13 @@ repositories {
 }
 
 java {
-    sourceCompatibility = 11
-    targetCompatibility = 11
+    sourceCompatibility = 17
+    targetCompatibility = 17
 }
 
 dependencies {
     implementation project(":java2flow-core")
-    implementation group: 'com.github.javaparser', name: 'javaparser-core', version: '3.25.3'
+    implementation group: 'com.github.javaparser', name: 'javaparser-core', version: '3.28.0'
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
 }

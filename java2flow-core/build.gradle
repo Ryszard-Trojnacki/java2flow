@@ -9,15 +9,15 @@ repositories {
 }
 
 java {
-    sourceCompatibility = 11
-    targetCompatibility = 11
+    sourceCompatibility = 17
+    targetCompatibility = 17
 }
 
 dependencies {
     implementation project(":java2flow-annotations")
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.15.1'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.21.1'
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
-    testImplementation group: 'org.jetbrains', name: 'annotations', version: '24.0.1'
+    testImplementation group: 'org.jetbrains', name: 'annotations', version: '26.1.0'
     testImplementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 }
