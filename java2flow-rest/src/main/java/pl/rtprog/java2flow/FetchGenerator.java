@@ -1,10 +1,10 @@
 package pl.rtprog.java2flow;
 
+import jakarta.ws.rs.PATCH;
 import pl.rtprog.java2flow.js.JsGenerator;
 import pl.rtprog.java2flow.structs.NamedTypeInfo;
 
-import javax.ws.rs.OPTIONS;
-import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -41,14 +41,25 @@ public class FetchGenerator {
 
     private final ArrayList<RestMethod> methods=new ArrayList<>();
 
+    /**
+     * Methods that should be processed in terms of having any request body or response body.
+     * @param m method to be checked
+     * @return true if a REST API method
+     */
+    private static boolean isRestMethod(Method m) {
+        return m.isAnnotationPresent(GET.class) || m.isAnnotationPresent(jakarta.ws.rs.GET.class)
+                || m.isAnnotationPresent(POST.class) || m.isAnnotationPresent(jakarta.ws.rs.POST.class)
+                || m.isAnnotationPresent(DELETE.class) || m.isAnnotationPresent(jakarta.ws.rs.DELETE.class)
+                || m.isAnnotationPresent(PUT.class) || m.isAnnotationPresent(jakarta.ws.rs.PUT.class)
+                || m.isAnnotationPresent(PATCH.class);
+    }
+
     public void register(Class<?> clazz) {
         if(!clazz.isAnnotationPresent(Path.class) && !clazz.isAnnotationPresent(jakarta.ws.rs.Path.class)) return;
         for(Method m: clazz.getMethods()) {
             if(FLOW_IGNORE!=null && m.isAnnotationPresent(FLOW_IGNORE)) continue;
-            // Skip methods without @Path annotation
-            if(!m.isAnnotationPresent(Path.class) && !m.isAnnotationPresent(jakarta.ws.rs.Path.class)) continue;
             // Skip options method
-            if(m.isAnnotationPresent(OPTIONS.class) || m.isAnnotationPresent(jakarta.ws.rs.OPTIONS.class)) continue;
+            if(!isRestMethod(m)) continue;
             try {
                 methods.add(RestMethod.of(m));
             }catch (IllegalArgumentException e) {}
