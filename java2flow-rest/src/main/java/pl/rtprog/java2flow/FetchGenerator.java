@@ -3,6 +3,7 @@ package pl.rtprog.java2flow;
 import pl.rtprog.java2flow.js.JsGenerator;
 import pl.rtprog.java2flow.structs.NamedTypeInfo;
 
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -44,6 +45,10 @@ public class FetchGenerator {
         if(!clazz.isAnnotationPresent(Path.class) && !clazz.isAnnotationPresent(jakarta.ws.rs.Path.class)) return;
         for(Method m: clazz.getMethods()) {
             if(FLOW_IGNORE!=null && m.isAnnotationPresent(FLOW_IGNORE)) continue;
+            // Skip methods without @Path annotation
+            if(!m.isAnnotationPresent(Path.class) && !m.isAnnotationPresent(jakarta.ws.rs.Path.class)) continue;
+            // Skip options method
+            if(m.isAnnotationPresent(OPTIONS.class) || m.isAnnotationPresent(jakarta.ws.rs.OPTIONS.class)) continue;
             try {
                 methods.add(RestMethod.of(m));
             }catch (IllegalArgumentException e) {}
