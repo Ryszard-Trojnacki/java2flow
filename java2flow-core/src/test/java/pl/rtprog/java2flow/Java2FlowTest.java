@@ -161,4 +161,14 @@ public class Java2FlowTest {
                 , c.toString());;
     }
 
+    record DataStruct(String str, int number){}
+
+    @Test
+    public void recordTest() {
+        Java2Flow c=new Java2Flow(null, null, true, true);
+        c.export(DataStruct.class);
+        var s=c.toString();
+        assertFalse(s.contains("Record"));
+    }
+
 }

@@ -369,7 +369,7 @@ public class Java2Flow {
 
         out.append("export type ").append(name).append(" =");
         String superClass=null;
-        if(type.getSuperclass()!=Object.class && type.getSuperclass()!=null && !enumMap) {
+        if(type.getSuperclass()!=Object.class && type.getSuperclass()!= Record.class && type.getSuperclass()!=null && !enumMap) {
             String sup=getType(type.getSuperclass(), type.getGenericSuperclass());
             if(sup!=null) {
                 superClass=sup;
