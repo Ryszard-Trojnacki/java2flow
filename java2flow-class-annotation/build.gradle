@@ -15,9 +15,8 @@ java {
 
 dependencies {
     implementation project(":java2flow-core")
-    implementation group: 'org.ow2.asm', name: 'asm', version: '9.9.1'
+    implementation libs.asm
 
-    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
-    testImplementation group: 'org.jetbrains', name: 'annotations', version: '26.1.0'
-
+    testImplementation libs.junit
+    testImplementation libs.jetbrains.annotations
 }

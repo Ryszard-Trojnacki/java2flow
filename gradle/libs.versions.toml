@@ -1,0 +1,27 @@
+[versions]
+junit = '4.13.2'
+junit-jupiter = '5.9.3'
+jackson-databind = '2.21.1'
+jetbrains-annotations = '26.1.0'
+validation-api = '2.0.1.Final'
+asm = '9.9.1'
+javaparser-core = '3.28.0'
+resteasy-jaxrs = '3.0.12.Final'
+jakarta-ws-rs = '3.1.0'
+gradle-plugin-publish = '1.1.0'
+
+[plugins]
+gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-plugin-publish" }
+
+[libraries]
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit-jupiter" }
+jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson-databind" }
+jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrains-annotations" }
+validation-api = { group = "javax.validation", name = "validation-api", version.ref = "validation-api" }
+asm = { group = "org.ow2.asm", name = "asm", version.ref = "asm" }
+javaparser-core = { group = "com.github.javaparser", name = "javaparser-core", version.ref = "javaparser-core" }
+resteasy-jaxrs-api = { group = "org.jboss.resteasy", name = "jaxrs-api", version.ref = "resteasy-jaxrs" }
+jakarta-ws-rs-api = { group = "jakarta.ws.rs", name = "jakarta.ws.rs-api", version.ref = "jakarta-ws-rs" }
+
+[bundles]

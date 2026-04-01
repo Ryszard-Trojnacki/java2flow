@@ -1,7 +1,7 @@
 plugins {
     id 'java-gradle-plugin'
     id 'idea'
-    id 'com.gradle.plugin-publish' version '1.1.0'
+    alias(libs.plugins.gradle.plugin.publish)
 }
 
 java {
@@ -18,11 +18,10 @@ dependencies {
     implementation project(":java2flow-javadoc-reader")
     implementation project(":java2flow-class-annotation")
 
-    implementation group: 'org.jetbrains', name: 'annotations', version: '24.0.1'
-    implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+    implementation libs.jetbrains.annotations
+    implementation libs.validation.api
 
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+    testImplementation libs.junit.jupiter
 }
 
 gradlePlugin {

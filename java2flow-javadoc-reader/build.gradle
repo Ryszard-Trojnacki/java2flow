@@ -15,7 +15,7 @@ java {
 
 dependencies {
     implementation project(":java2flow-core")
-    implementation group: 'com.github.javaparser', name: 'javaparser-core', version: '3.28.0'
+    implementation libs.javaparser.core
 
-    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testImplementation libs.junit
 }
