@@ -206,6 +206,17 @@ public class Java2Flow {
     }
 
     /**
+     * Register types that should be processed.
+     * Those types will be returned as they are named in Java.
+     * @param types types to register as ignored.
+     */
+    public void registerIgnoredTypes(Class<?>... types) {
+        for(var t: types) {
+            this.types.put(t, getTypename(t));
+        }
+    }
+
+    /**
      * Method for registering external (imported) type for given Java class.
      * @param type java type
      * @param name name of this type in JavaScript/Flow
