@@ -251,6 +251,30 @@ public class Java2Flow {
         registerExternalType(type, name, importFile, false);
     }
 
+    /**
+     * Helper method to resolve a Flow type string from a generic type argument
+     * obtained via {@link java.lang.reflect.ParameterizedType#getActualTypeArguments()}.
+     * <p>
+     * When the type argument is a plain {@link Class}, it delegates directly to
+     * {@link #getType(Class, java.lang.reflect.Type) getType(clazz, clazz)}.
+     * When the type argument is itself a {@link java.lang.reflect.ParameterizedType}
+     * (chained generics, e.g. {@code Map<String, Map<String, Object>>}), it uses
+     * {@link java.lang.reflect.ParameterizedType#getRawType()} as the class and the
+     * full parameterized type as the type-info so that nested type parameters are
+     * resolved correctly.
+     *
+     * @param typeArg one element returned by {@code getActualTypeArguments()}
+     * @return the corresponding Flow/JSDoc type string
+     */
+    private String getTypeFromTypeArg(Type typeArg) {
+        if (typeArg instanceof Class<?> clazz) {
+            return getType(clazz, clazz);
+        } else if (typeArg instanceof ParameterizedType pt) {
+            return getType((Class<?>) pt.getRawType(), pt);
+        }
+        return "any";
+    }
+
     protected void flushImports() {
         for(var e: imports.entrySet()) {
             if(flow) {
@@ -305,28 +329,23 @@ public class Java2Flow {
             return "Array<"+getType(type.getComponentType(), typeInfo)+">";
         }
         if(List.class.isAssignableFrom(type)) {
-            if(typeInfo instanceof CollectionType) {
-                CollectionType ct=(CollectionType)typeInfo;
+            if(typeInfo instanceof CollectionType ct) {
                 return "Array<"+getType(ct.getContentType().getRawClass(), ct.getContentType())+">";
             }
-            if(typeInfo instanceof ParameterizedType) {
-                Class<?> comp=(Class<?>)((ParameterizedType)typeInfo).getActualTypeArguments()[0];
-                return "Array<"+getType(comp, comp)+">";
+            if(typeInfo instanceof ParameterizedType pt) {
+                return "Array<" + getTypeFromTypeArg(pt.getActualTypeArguments()[0]) + ">";
             } else return "Array<any>";
         }
         boolean enumMap=EnumMap.class==type.getSuperclass();
         if(!enumMap && Map.class.isAssignableFrom(type)) {
-            if((typeInfo instanceof JavaType) && ((JavaType)typeInfo).isMapLikeType()) {
-                JavaType mt=(JavaType)typeInfo;
+            if(typeInfo instanceof JavaType mt && mt.isMapLikeType()) {
                 return "{ ["+getType(mt.getKeyType().getRawClass(), mt.getKeyType())
                         +"]: "+getType(mt.getContentType().getRawClass(), mt.getContentType())+" }";
             }
             Type ti=typeInfo;
             if(!(ti instanceof ParameterizedType)) ti=type.getGenericSuperclass();
-            if(ti instanceof ParameterizedType) {
-                Class<?> key=(Class<?>)((ParameterizedType)ti).getActualTypeArguments()[0];
-                Class<?> value=(Class<?>)((ParameterizedType)ti).getActualTypeArguments()[1];
-                return "{ ["+ getType(key, key)+"]: "+ getType(value, value)+" }";
+            if(ti instanceof ParameterizedType pt) {
+                return "{ ["+ getTypeFromTypeArg(pt.getActualTypeArguments()[0])+"]: "+ getTypeFromTypeArg(pt.getActualTypeArguments()[1])+" }";
             }
             return "{}";    // any map
         }
@@ -394,10 +413,9 @@ public class Java2Flow {
         if(enumMap) {
             Type ti=typeInfo;
             if(!(ti instanceof ParameterizedType)) ti=type.getGenericSuperclass();
-            if(ti instanceof ParameterizedType) {
-                Class<?> key=(Class<?>)((ParameterizedType)ti).getActualTypeArguments()[0];
-                Class<?> value=(Class<?>)((ParameterizedType)ti).getActualTypeArguments()[1];
-                String valueType=getType(value, value);
+            if(ti instanceof ParameterizedType pt) {
+                Class<?> key=(Class<?>)pt.getActualTypeArguments()[0];
+                String valueType=getTypeFromTypeArg(pt.getActualTypeArguments()[1]);
                 for(Enum<?> v: (Enum<?>[])key.getEnumConstants()) {
                     out.append('\t').append(v.name()).append(":? ").append(valueType).append(";\n");
                     doc.append(" * @property {").append(valueType).append("} [").append(v.name()).append(']').append('\n');

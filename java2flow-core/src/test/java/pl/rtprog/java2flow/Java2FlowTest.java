@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -169,6 +170,32 @@ public class Java2FlowTest {
         c.export(DataStruct.class);
         var s=c.toString();
         assertFalse(s.contains("Record"));
+    }
+
+    // --- Chained generics tests ---
+
+    /** Reproduces the ClassCastException: value type is Map<String,Object>, a ParameterizedType, not a raw Class. */
+    static class ChainedGenericMap extends HashMap<String, Map<String, Object>> {}
+
+    @Test
+    public void chainedGenericMapTest() {
+        Java2Flow c = new Java2Flow(null, null, true, false);
+        // Before the fix this threw ClassCastException because Map<String,Object>
+        // is a ParameterizedType, not a plain Class.
+        String type = c.getJavaScriptType(ChainedGenericMap.class);
+        assertEquals("{ [string]: { [string]: any } }", type);
+    }
+
+    /** Tests the List ParameterizedType path triggered when the list element type is itself generic. */
+    static class ChainedGenericMapWithList extends HashMap<String, List<Map<String, Integer>>> {}
+
+    @Test
+    public void chainedGenericMapWithListTest() {
+        Java2Flow c = new Java2Flow(null, null, true, false);
+        // Before the fix this also threw ClassCastException when resolving List<Map<String,Integer>>
+        // as the map value type and then Map<String,Integer> as the list element type.
+        String type = c.getJavaScriptType(ChainedGenericMapWithList.class);
+        assertEquals("{ [string]: Array<{ [string]: number }> }", type);
     }
 
 }
